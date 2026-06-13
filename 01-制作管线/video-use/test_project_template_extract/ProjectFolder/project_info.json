@@ -1,0 +1,56 @@
+{
+  "vbl_modify_version": "8.1.1.1",
+  "vbl_create_version": "8.1.1.1",
+  "project_os_name": "Windows",
+  "project_os_version": "",
+  "project_file_name": "Test Project",
+  "project_file_suffix": ".wfpx",
+  "project_editor_name": "MiaoYing",
+  "project_editor_create_version": "15.1.2.17052",
+  "project_editor_modify_version": "15.1.2.17052",
+  "project_date_create": 1768305442,
+  "project_date_modify": 1768531406,
+  "project_timeline_duration": 100000000,
+  "project_current_position": 0,
+  "project_timeline_framerate": [
+    60,
+    1
+  ],
+  "project_timeline_resolution": [
+    1920,
+    1080
+  ],
+  "project_timeline_ratio": [
+    16,
+    9
+  ],
+  "project_color_space": 0,
+  "project_sample_rate": 44100,
+  "project_audio_bitdepth": 1,
+  "project_player_quality": 0,
+  "project_player_zoom_level": 0,
+  "project_player_safe_zone": false,
+  "project_archive": false,
+  "project_storage": true,
+  "project_backup": false,
+  "project_cover": false,
+  "project_custom_cover": false,
+  "project_type": 0,
+  "project_template_name": "",
+  "timeline_mediaId": "{9089B729-2FCB-4ee7-8422-41C6D6B43639}",
+  "project_guid": "{370054FC-C50F-4592-A9C2-8934CFCE23E0}",
+  "proj_zip_save_path": "D:/工程文件/Wondershare/Wondershare Filmora/Projects/第一期视频-n8n信息助手.wfpx",
+  "proj_cover_proj_path": "D:/工程文件/Wondershare/Wondershare miaoying/Backup/{370054FC-C50F-4592-A9C2-8934CFCE23E0}/ProjectFolder/Anon/Cover/cover_7xxqv.wfpbundlex",
+  "nSizeRatioType": 0,
+  "project_used_pack_list": [],
+  "user_data": [
+    {
+      "key": 1,
+      "data": "1"
+    },
+    {
+      "key": 2,
+      "data": ""
+    }
+  ]
+}

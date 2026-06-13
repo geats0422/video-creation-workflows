@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "sources": {
+    "test_video": "D:\\work\\OPC\\video-use\\test_video.mp4"
+  },
+  "ranges": [
+    {
+      "source": "test_video",
+      "start": 0.0,
+      "end": 5.0,
+      "beat": "HOOK",
+      "quote": "Test clip 1",
+      "reason": "First 5 seconds"
+    },
+    {
+      "source": "test_video",
+      "start": 10.0,
+      "end": 15.0,
+      "beat": "CONTENT",
+      "quote": "Test clip 2",
+      "reason": "10-15 seconds"
+    }
+  ],
+  "grade": "none",
+  "overlays": [],
+  "subtitles": null,
+  "total_duration_s": 10.0
+}

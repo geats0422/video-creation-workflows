@@ -1,0 +1,601 @@
+{
+  "currentTimelineId": 1,
+  "productName": "Filmora",
+  "projectName": "Test Project",
+  "projectVersion": "6, 8, 101, 2",
+  "resources": [
+    {
+      "AIGCMeta": {
+        "data": "",
+        "size": 0
+      },
+      "audStreamInfo": [
+        {
+          "audLang": "",
+          "audStreamId": 0,
+          "bitDepth": 16,
+          "bitRate": 128000,
+          "bytesPerSecond": 16000,
+          "channels": 2,
+          "description": "Advanced Audio Codec",
+          "duration": 20.0,
+          "fourCC": 541278529,
+          "layout": 0,
+          "sampleRate": 48000,
+          "streamLength": 200000000
+        }
+      ],
+      "audioStreamCount": 1,
+      "bitRate": 5000000,
+      "createDate": 0,
+      "filename": "file:/D:/work/OPC/video-use/test_video.mp4",
+      "fourCC": 540299341,
+      "mediaLength": 200000000,
+      "modifyDate": 0,
+      "programCount": 1,
+      "sourceUuid": "9abab659-ca15-4089-a846-d4892f540032",
+      "streamType": 2,
+      "subPicStreamCount": 0,
+      "videoStreamCount": 1,
+      "vidStreamInfo": [
+        {
+          "ViewsCount": 0,
+          "alphaChannel": 0,
+          "bitRate": 5000000,
+          "bitsDepth": 24,
+          "cameraMaker": "None",
+          "cameraModel": "None",
+          "colorChromesubsampling": 0,
+          "colorPrimary": 0,
+          "colorRange": 0,
+          "colorSpace": 0,
+          "colorSpaceSource": 0,
+          "exposureTime": 0.0,
+          "flipType": 0,
+          "fourCC": 875967048,
+          "frameRate": {
+            "den": 1,
+            "num": 30
+          },
+          "gpsLatitude": 0.0,
+          "gpsLongitude": 0.0,
+          "height": 1080,
+          "isDolbyVision": 0,
+          "lastframeRate": {
+            "den": 1,
+            "num": 30
+          },
+          "maxFrameRate": {
+            "den": 100,
+            "num": 3000
+          },
+          "maxGopSize": 30,
+          "premultiAlphaTypePhoto": -1,
+          "rotation": 0,
+          "startTimestamp": 0,
+          "streamId": 0,
+          "streamLength": 200000000,
+          "timestampOffset": 0,
+          "totalFrames": 600,
+          "transferCharacteristics": 0,
+          "videoScanType": 2,
+          "width": 1920,
+          "xRatio": 1920,
+          "yRatio": 1080
+        }
+      ]
+    }
+  ],
+  "serialNumber": 0,
+  "serializationVersion": 1,
+  "timelineInfos": [
+    {
+      "aspectRatioX": 1920,
+      "aspectRatioY": 1080,
+      "audioBusInfos": [
+        {
+          "busType": 0,
+          "uuid": "{92880E21-49AD-4FF7-80E2-9E5C56B45487}"
+        }
+      ],
+      "channels": 2,
+      "format": 0,
+      "frameRate": {
+        "den": 1,
+        "num": 30
+      },
+      "hdrMode": 0,
+      "hdrMode_force_16bit": false,
+      "resolutionHeight": 1080,
+      "resolutionWidth": 1920,
+      "sampleRate": 48000,
+      "timelineId": 1,
+      "trackInfos": [
+        {
+          "busUuids": [
+            "{240E8680-E32E-4505-91B7-82DC78B064E8}"
+          ],
+          "clipList": [
+            {
+              "CacheAlg": [
+                {
+                  "cache_mode": 0,
+                  "id": "WindDenoiseCache",
+                  "params": [
+                    {
+                      "fxParam": {
+                        "paramType": 5,
+                        "unValue": 100
+                      },
+                      "name": "WindDenoiseRatio"
+                    }
+                  ],
+                  "status": 1,
+                  "version": 1
+                }
+              ],
+              "audioDuckingframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              },
+              "audio_cloud_algorithm": {
+                "info": [
+                  {
+                    "type": "audio"
+                  }
+                ],
+                "version": 1
+              },
+              "denoiseV3Strength": 50.0,
+              "effectChainList": [
+                {
+                  "effectList": [],
+                  "name": "Basic"
+                },
+                {
+                  "effectList": [],
+                  "name": "Effect"
+                },
+                {
+                  "effectList": [],
+                  "name": "_wes_hold_effectchain_"
+                }
+              ],
+              "filename": "",
+              "inPoint": 0,
+              "outPoint": 50000000,
+              "sourceUuid": "9abab659-ca15-4089-a846-d4892f540032",
+              "speed": {
+                "offset": 0.0,
+                "offsetEnd": 5.0,
+                "reverse": false,
+                "speedParam": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [{\"_time\": 0.0,\"Interpolation\": 6,\"_value\": 1.0}],\"MD5\": \"71bd40df43914650e82f103348704572\",\"_totalTime\": 5.0}"
+              },
+              "streamId": 0,
+              "thisUId": "{932661D7-BBD6-439E-9109-80E707665097}",
+              "tlBegin": 0,
+              "tlEnd": 50000000,
+              "type": 2,
+              "userData": [
+                {
+                  "data": "AAAAAA==",
+                  "key": 102,
+                  "size": 4
+                },
+                {
+                  "data": "JQAAAA==",
+                  "key": 6,
+                  "size": 4
+                },
+                {
+                  "data": "cXVpY2tNb2Rl",
+                  "key": 30304,
+                  "size": 9
+                },
+                {
+                  "data": "BAAAAA==",
+                  "key": 103,
+                  "size": 4
+                },
+                {
+                  "data": "{E47FC998-EEEF-4B98-81E5-68C0B26E29DE}",
+                  "key": 10,
+                  "size": 38
+                },
+                {
+                  "data": "AAAAAA==",
+                  "key": 2,
+                  "size": 4
+                },
+                {
+                  "data": "{D52D9DC0-B265-49E6-BD4C-D8E3276C8ABD}",
+                  "key": 3,
+                  "size": 64
+                },
+                {
+                  "data": "AgAAAA==",
+                  "key": 1,
+                  "size": 4
+                },
+                {
+                  "data": "8v///w==",
+                  "key": 30307,
+                  "size": 4
+                }
+              ],
+              "volumeKeyframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              }
+            },
+            {
+              "CacheAlg": [
+                {
+                  "cache_mode": 0,
+                  "id": "WindDenoiseCache",
+                  "params": [
+                    {
+                      "fxParam": {
+                        "paramType": 5,
+                        "unValue": 100
+                      },
+                      "name": "WindDenoiseRatio"
+                    }
+                  ],
+                  "status": 1,
+                  "version": 1
+                }
+              ],
+              "audioDuckingframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              },
+              "audio_cloud_algorithm": {
+                "info": [
+                  {
+                    "type": "audio"
+                  }
+                ],
+                "version": 1
+              },
+              "denoiseV3Strength": 50.0,
+              "effectChainList": [
+                {
+                  "effectList": [],
+                  "name": "Basic"
+                },
+                {
+                  "effectList": [],
+                  "name": "Effect"
+                },
+                {
+                  "effectList": [],
+                  "name": "_wes_hold_effectchain_"
+                }
+              ],
+              "filename": "",
+              "inPoint": 100000000,
+              "outPoint": 150000000,
+              "sourceUuid": "9abab659-ca15-4089-a846-d4892f540032",
+              "speed": {
+                "offset": 0.0,
+                "offsetEnd": 5.0,
+                "reverse": false,
+                "speedParam": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [{\"_time\": 0.0,\"Interpolation\": 6,\"_value\": 1.0}],\"MD5\": \"71bd40df43914650e82f103348704572\",\"_totalTime\": 5.0}"
+              },
+              "streamId": 0,
+              "thisUId": "{D3F9B1B8-255A-457D-A6D3-C4106731AB00}",
+              "tlBegin": 50000000,
+              "tlEnd": 100000000,
+              "type": 2,
+              "userData": [
+                {
+                  "data": "AAAAAA==",
+                  "key": 102,
+                  "size": 4
+                },
+                {
+                  "data": "JQAAAA==",
+                  "key": 6,
+                  "size": 4
+                },
+                {
+                  "data": "cXVpY2tNb2Rl",
+                  "key": 30304,
+                  "size": 9
+                },
+                {
+                  "data": "BAAAAA==",
+                  "key": 103,
+                  "size": 4
+                },
+                {
+                  "data": "{1550EC93-0875-48C6-837F-34170CA598C9}",
+                  "key": 10,
+                  "size": 38
+                },
+                {
+                  "data": "AAAAAA==",
+                  "key": 2,
+                  "size": 4
+                },
+                {
+                  "data": "{33A2B2FE-6481-42EE-8586-75288C5CF4BA}",
+                  "key": 3,
+                  "size": 64
+                },
+                {
+                  "data": "AgAAAA==",
+                  "key": 1,
+                  "size": 4
+                },
+                {
+                  "data": "8v///w==",
+                  "key": 30307,
+                  "size": 4
+                }
+              ],
+              "volumeKeyframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              }
+            }
+          ],
+          "trackType": 2,
+          "userData": [
+            {
+              "data": "MAAAAA==",
+              "key": 12000,
+              "size": 4
+            },
+            {
+              "data": "5Y+j5pKt",
+              "key": 50,
+              "size": 6
+            }
+          ],
+          "uuid": "{9B4F3C10-09BA-4421-BC10-D33B34C156AE}"
+        },
+        {
+          "busUuids": [
+            "{5F626F46-08AC-40B6-94D3-1013B5DFC6E2}"
+          ],
+          "clipList": [
+            {
+              "CacheAlg": [
+                {
+                  "cache_mode": 0,
+                  "id": "WindDenoiseCache",
+                  "params": [
+                    {
+                      "fxParam": {
+                        "paramType": 5,
+                        "unValue": 100
+                      },
+                      "name": "WindDenoiseRatio"
+                    }
+                  ],
+                  "status": 1,
+                  "version": 1
+                }
+              ],
+              "audioDuckingframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              },
+              "audio_cloud_algorithm": {
+                "info": [
+                  {
+                    "type": "audio"
+                  }
+                ],
+                "version": 1
+              },
+              "denoiseV3Strength": 50.0,
+              "effectChainList": [
+                {
+                  "effectList": [],
+                  "name": "Basic"
+                },
+                {
+                  "effectList": [],
+                  "name": "Effect"
+                },
+                {
+                  "effectList": [],
+                  "name": "_wes_hold_effectchain_"
+                }
+              ],
+              "filename": "",
+              "inPoint": 0,
+              "outPoint": 50000000,
+              "sourceUuid": "9abab659-ca15-4089-a846-d4892f540032",
+              "speed": {
+                "offset": 0.0,
+                "offsetEnd": 5.0,
+                "reverse": false,
+                "speedParam": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [{\"_time\": 0.0,\"Interpolation\": 6,\"_value\": 1.0}],\"MD5\": \"71bd40df43914650e82f103348704572\",\"_totalTime\": 5.0}"
+              },
+              "streamId": 0,
+              "thisUId": "{932661D7-BBD6-439E-9109-80E707665097}",
+              "tlBegin": 0,
+              "tlEnd": 50000000,
+              "type": 2,
+              "userData": [
+                {
+                  "data": "AAAAAA==",
+                  "key": 102,
+                  "size": 4
+                },
+                {
+                  "data": "JQAAAA==",
+                  "key": 6,
+                  "size": 4
+                },
+                {
+                  "data": "cXVpY2tNb2Rl",
+                  "key": 30304,
+                  "size": 9
+                },
+                {
+                  "data": "BAAAAA==",
+                  "key": 103,
+                  "size": 4
+                },
+                {
+                  "data": "{E47FC998-EEEF-4B98-81E5-68C0B26E29DE}",
+                  "key": 10,
+                  "size": 38
+                },
+                {
+                  "data": "AAAAAA==",
+                  "key": 2,
+                  "size": 4
+                },
+                {
+                  "data": "{D52D9DC0-B265-49E6-BD4C-D8E3276C8ABD}",
+                  "key": 3,
+                  "size": 64
+                },
+                {
+                  "data": "AgAAAA==",
+                  "key": 1,
+                  "size": 4
+                },
+                {
+                  "data": "8v///w==",
+                  "key": 30307,
+                  "size": 4
+                }
+              ],
+              "volumeKeyframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              }
+            },
+            {
+              "CacheAlg": [
+                {
+                  "cache_mode": 0,
+                  "id": "WindDenoiseCache",
+                  "params": [
+                    {
+                      "fxParam": {
+                        "paramType": 5,
+                        "unValue": 100
+                      },
+                      "name": "WindDenoiseRatio"
+                    }
+                  ],
+                  "status": 1,
+                  "version": 1
+                }
+              ],
+              "audioDuckingframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              },
+              "audio_cloud_algorithm": {
+                "info": [
+                  {
+                    "type": "audio"
+                  }
+                ],
+                "version": 1
+              },
+              "denoiseV3Strength": 50.0,
+              "effectChainList": [
+                {
+                  "effectList": [],
+                  "name": "Basic"
+                },
+                {
+                  "effectList": [],
+                  "name": "Effect"
+                },
+                {
+                  "effectList": [],
+                  "name": "_wes_hold_effectchain_"
+                }
+              ],
+              "filename": "",
+              "inPoint": 100000000,
+              "outPoint": 150000000,
+              "sourceUuid": "9abab659-ca15-4089-a846-d4892f540032",
+              "speed": {
+                "offset": 0.0,
+                "offsetEnd": 5.0,
+                "reverse": false,
+                "speedParam": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [{\"_time\": 0.0,\"Interpolation\": 6,\"_value\": 1.0}],\"MD5\": \"71bd40df43914650e82f103348704572\",\"_totalTime\": 5.0}"
+              },
+              "streamId": 0,
+              "thisUId": "{D3F9B1B8-255A-457D-A6D3-C4106731AB00}",
+              "tlBegin": 50000000,
+              "tlEnd": 100000000,
+              "type": 2,
+              "userData": [
+                {
+                  "data": "AAAAAA==",
+                  "key": 102,
+                  "size": 4
+                },
+                {
+                  "data": "JQAAAA==",
+                  "key": 6,
+                  "size": 4
+                },
+                {
+                  "data": "cXVpY2tNb2Rl",
+                  "key": 30304,
+                  "size": 9
+                },
+                {
+                  "data": "BAAAAA==",
+                  "key": 103,
+                  "size": 4
+                },
+                {
+                  "data": "{1550EC93-0875-48C6-837F-34170CA598C9}",
+                  "key": 10,
+                  "size": 38
+                },
+                {
+                  "data": "AAAAAA==",
+                  "key": 2,
+                  "size": 4
+                },
+                {
+                  "data": "{33A2B2FE-6481-42EE-8586-75288C5CF4BA}",
+                  "key": 3,
+                  "size": 64
+                },
+                {
+                  "data": "AgAAAA==",
+                  "key": 1,
+                  "size": 4
+                },
+                {
+                  "data": "8v///w==",
+                  "key": 30307,
+                  "size": 4
+                }
+              ],
+              "volumeKeyframe": {
+                "parameter": "{\"Version\": 2,\"ParameterType\": 0,\"keyframeSets\": [],\"MD5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"
+              }
+            }
+          ],
+          "trackType": 1,
+          "userData": [
+            {
+              "data": "MAAAAA==",
+              "key": 12000,
+              "size": 4
+            },
+            {
+              "data": "5Y+j5pKt",
+              "key": 50,
+              "size": 6
+            }
+          ],
+          "uuid": "{3972F5A0-A2D0-457F-8C55-5276248347C1}"
+        }
+      ],
+      "type": 0,
+      "userData": ""
+    }
+  ]
+}
