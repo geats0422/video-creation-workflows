@@ -372,12 +372,13 @@ ${clipitemsA.join('\n')}
 </xmeml>
 `;
 
-        // Write .prproj
+        // Write .prproj (gzipped XML for modern Pr 2020+ / 剪映 import)
+        const zlib = require('zlib');
         const prprojPath = path.resolve(path.basename(videoPathObj, path.extname(videoPathObj)) + '_cut.prproj');
-        fs.writeFileSync(prprojPath, '\ufeff' + xml, 'utf8');
-        console.log(`✅ 导出 .prproj: ${prprojPath} (${allKeeps.length} 片段)`);
+        fs.writeFileSync(prprojPath, zlib.gzipSync(xml, { level: 6 }));
+        console.log(`✅ 导出 .prproj (gzipped): ${prprojPath} (${allKeeps.length} 片段)`);
 
-        // Also write FCPXML for FCP users
+        // Also write FCPXML for FCP users (uncompressed xmeml)
         const fcpPath = path.resolve(path.basename(videoPathObj, path.extname(videoPathObj)) + '_cut.fcpxml');
         fs.writeFileSync(fcpPath, '\ufeff' + xml, 'utf8');
 
