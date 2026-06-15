@@ -28,7 +28,7 @@ D:\work\OPC\videos\{第X期：视频标题}\
 Resolve `{第X期：视频标题}` using this priority:
 
 1. Use the explicit project folder if the user provides it.
-2. If a request file is under `D:\work\OPC\videos\...\edit\handoff\`, use that parent video project folder.
+2. If a request file is under `D:\work\OPC\videos\...\Rough\` or `D:\work\OPC\videos\...\video scripts\`, use that parent video project folder.
 3. If the user provides only episode number and title, compose `D:\work\OPC\videos\{第X期：视频标题}\`.
 4. If the episode number is missing, inspect `D:\work\OPC\videos\`, infer the next `第X期`, and state the inferred project folder before writing files.
 
@@ -41,12 +41,12 @@ D:\work\OPC\videos\{第X期：视频标题}\assets\
 User-shot originals live in:
 
 ```text
-D:\work\OPC\videos\{第X期：视频标题}\Raw Footage\
+D:\work\OPC\videos\{第X期：视频标题}\Raw\
 ```
 
 Raw footage naming rule: `拍摄形式【分镜号范围】.ext`, aligned with `video scripts\storyboard.json`; examples: `实拍【EP001-S01-001到EP001-S04-001】.mp4`, `OBS录屏【EP001-S05-001到EP001-S10-001】.mp4`.
 
-Treat `Raw Footage\` as read-only user originals. If user-provided OBS or facecam recordings need normalization/transcode, write processed copies under `assets\raw\video\` or the consumer workflow's `edit\` directory, and record the command in `assets\logs\ffmpeg_commands.md`. Never overwrite originals.
+Treat `Raw\` as read-only user originals. If user-provided OBS or facecam recordings need normalization/transcode, write processed copies under `assets\raw\video\` or the consumer workflow's `Rough\` directory, and record the command in `assets\logs\ffmpeg_commands.md`. Never overwrite originals.
 
 Use this structure:
 

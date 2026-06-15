@@ -47,12 +47,14 @@ D:\work\OPC\videos\{第X期：视频标题}\assets\requests\asset_request_list.m
 User-shot originals live in:
 
 ```text
-D:\work\OPC\videos\{第X期：视频标题}\Raw Footage\
+D:\work\OPC\videos\{第X期：视频标题}\Raw\
 ```
 
 Raw footage naming rule: `拍摄形式【分镜号范围】.ext`, aligned with `storyboard.json`; examples: `实拍【EP001-S01-001到EP001-S04-001】.mp4`, `OBS录屏【EP001-S05-001到EP001-S10-001】.mp4`, `实拍【EP001-S05-001第一句话】.mp4`.
 
-Treat `Raw Footage\` as read-only evidence of what was actually shot. Do not write planning files there. When updating storyboard after shooting, reflect real footage choices in `presentation`, `visual`, `execution_note`, `material_analysis`, and derived Feishu/material files.
+Treat `Raw\` as read-only evidence of what was actually shot. Do not write planning files there. When updating storyboard after shooting, reflect real footage choices in `presentation`, `visual`, `execution_note`, `material_analysis`, and derived Feishu/material files.
+
+Rough cut outputs live in `Rough\` and final video in `Final\`. See `video-use` skill for full directory layout.
 
 Never write generated planning files into the skill directory, workspace root, or temp directories.
 

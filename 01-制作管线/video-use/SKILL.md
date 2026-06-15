@@ -30,30 +30,42 @@ These are the things where deviation produces silent failures or broken output. 
 9. **Cache transcripts per source.** Never re-transcribe unless the source file itself changed.
 10. **Parallel sub-agents for multiple animations.** Never sequential. Spawn N at once via the `Agent` tool; total wall time ≈ slowest one.
 11. **Strategy confirmation before execution.** Never touch the cut until the user has approved the plain-English plan.
-12. **All session outputs in `<videos_dir>/edit/`.** Never write inside the `video-use/` project directory.
+12. **All rough-cut session outputs in `Rough\`.** Final render in `Final\`. Subtitles in `Sub\`. Never write inside the `video-use/` project directory.
 13. **Never truncate scripted speech.** For manuscript-driven videos, every kept beat must cover the full corresponding script/operational explanation. If ASR confidence is poor or the phrase boundary is ambiguous, extend the range conservatively and let the user trim later. Missing spoken content is a production failure; extra tail room is acceptable.
 
 Everything else in this document is a worked example. Deviate whenever the material calls for it.
 
 ## Directory layout
 
-The skill lives in `video-use/`. User footage lives wherever they put it. All session outputs go into `<videos_dir>/edit/`.
+The skill lives in `video-use/`. User footage lives in `Raw\`. Rough-cut outputs go in `Rough\`. Final render in `Final\`. Subtitles in `Sub\`.
 
 ```
 <videos_dir>/
-├── Raw Footage/              ← user-shot originals, untouched
-└── edit/
-    ├── project.md               ← memory; appended every session
-    ├── takes_packed.md          ← phrase-level transcripts, the LLM's primary reading view
-    ├── edl.json                 ← cut decisions
-    ├── transcripts/<name>.json  ← cached raw Scribe JSON
-    ├── animations/slot_<id>/    ← per-animation source + render + reasoning
-    ├── clips_graded/            ← per-segment extracts with grade + fades
-    ├── master.srt               ← output-timeline subtitles
-    ├── downloads/               ← yt-dlp outputs
-    ├── verify/                  ← debug frames / timeline PNGs
-    ├── preview.mp4
-    └── final.mp4
+├── Raw/                        ← user-shot originals, untouched
+├── Rough/                      ← rough-cut working directory
+│   ├── project.md              ← memory; appended every session
+│   ├── takes_packed.md         ← phrase-level transcripts, the LLM's primary reading view
+│   ├── edl.json                ← cut decisions
+│   ├── transcripts/<name>.json ← cached raw Scribe JSON
+│   ├── animations/slot_<id>/   ← per-animation source + render + reasoning
+│   ├── clips_graded/           ← per-segment extracts with grade + fades
+│   ├── rough_cut_manifest.md   ← rough-cut status (for planner handoff)
+│   ├── missing_materials.md    ← gap list (for planner handoff)
+│   ├── verify/                 ← debug frames / timeline PNGs
+│   ├── downloads/              ← yt-dlp outputs
+│   └── preview.mp4
+├── Polished/                   ← polished cut (with Remotion materials)
+│   ├── Remotion/               ← Remotion motion projects (from huanyu-remotion-material)
+│   └── preview.mp4
+├── Final/                      ← final render, confirmed for publish
+│   └── video_final.mp4
+├── Sub/                        ← subtitle files
+│   └── master.srt
+├── Thumb/                      ← thumbnail images
+├── Backup/                     ← archive backup
+├── video scripts\              ← manuscript + storyboard planning
+├── assets\                     ← external assets + licenses
+└── ProjectFolder\              ← Filmora/剪映 project files
 ```
 
 ## Setup
@@ -76,13 +88,13 @@ Helpers (`helpers/transcribe.py`, `helpers/render.py`, etc.) live alongside this
 
 - **`transcribe.py <video>`** — Whisper + Fun-ASR transcription. `--language zh` optional. `--whisper-model large-v3` optional. Cached.
 - **`transcribe_batch.py <videos_dir>`** — 4-worker parallel transcription. Use for multi-take.
-- **`pack_transcripts.py --edit-dir <dir>`** — `transcripts/*.json` → `takes_packed.md` (phrase-level, break on silence ≥ 0.5s).
+- **`pack_transcripts.py --edit-dir <dir>`** — `Rough\transcripts\*.json` → `Rough\takes_packed.md` (phrase-level, break on silence ≥ 0.5s).
 - **`timeline_view.py <video> <start> <end>`** — filmstrip + waveform PNG. On-demand visual drill-down. **Not a scan tool** — use it at decision points, not constantly.
-- **`render.py <edl.json> -o <out>`** — per-segment extract → concat → overlays (PTS-shifted) → subtitles LAST. `--preview` for 720p fast. `--build-subtitles` to generate master.srt inline.
+- **`render.py <edl.json> -o <out>`** — per-segment extract → concat → overlays (PTS-shifted) → subtitles LAST. `--preview` for 720p fast. `--build-subtitles` to generate `Sub\master.srt` inline.
 - **`grade.py <in> -o <out>`** — ffmpeg filter chain grade. Presets + `--filter '<raw>'` for custom.
 - **`generate_filmora_project.py <edl.json> -o <out>`** — Generate Wondershare Filmora project (.wfpx) from EDL. It auto-detects the nearest `ProjectFolder` beside the EDL, matching the project layout `D:\work\OPC\videos\{第X期：视频标题}\ProjectFolder`. Fallback template is `D:\work\OPC\video-use\123\ProjectFolder`. Use `--template-folder <ProjectFolder>` only to override auto-detection. `--name "Project Name"` optional.
 
-For animations, create `<edit>/animations/slot_<id>/` with `Bash` and spawn a sub-agent via the `Agent` tool.
+For animations, create `Rough\animations\slot_<id>\` with `Bash` and spawn a sub-agent via the `Agent` tool.
 
 ## Prerequisites
 
@@ -99,26 +111,32 @@ Use this per-video directory layout:
 
 ```text
 D:\work\OPC\videos\{第X期：视频标题}\
-├── Raw Footage\
-├── picture\
-├── ProjectFolder\
-├── edit\
-└── video script\
+├── Raw\
+├── Rough\
+├── Polished\
+├── Final\
+├── Sub\
+├── Thumb\
+├── Backup\
+├── video scripts\
+├── assets\
+└── ProjectFolder\
 ```
 
 `{第X期：视频标题}` naming rule:
 
-- Before editing, the user places the script under `video script\`.
-- The script filename is the video title, e.g. `video script\让AI当你的赛博谋臣，是灾难还是外挂？.md`.
-- Before editing, the user places all recorded originals under `Raw Footage\`.
+- Before editing, the user places the script under `video scripts\`.
+- The script filename is the video title, e.g. `video scripts\让AI当你的赛博谋臣，是灾难还是外挂？.md`.
+- Before editing, the user places all recorded originals under `Raw\`.
 - Raw footage naming rule: `拍摄形式【分镜号范围】.ext`, aligned with `video scripts\storyboard.json`; examples: `实拍【EP001-S01-001到EP001-S04-001】.mp4`, `OBS录屏【EP001-S05-001到EP001-S10-001】.mp4`, `实拍【EP001-S05-001第一句话】.mp4`.
-- Treat `Raw Footage\` as read-only source material. Do not rename, move, normalize in place, overwrite, or write generated files there. All transcripts, EDLs, previews, normalized clips, Filmora handoffs, and logs go under `edit\`.
-- When transcribing or cutting, prefer `Raw Footage\` as the source directory and write caches to `edit\transcripts\`.
+- Treat `Raw\` as read-only source material. Do not rename, move, normalize in place, overwrite, or write generated files there. All transcripts, EDLs, previews, normalized clips, Filmora handoffs, and logs go under `Rough\`.
+- When transcribing or cutting, prefer `Raw\` as the source directory and write caches to `Rough\transcripts\`.
+- Subtitles go to `Sub\master.srt`. Final render goes to `Final\video_final.mp4`.
 - The user normally specifies the episode number `第X期`.
 - If the user forgets the episode number, inspect existing directories under `D:\work\OPC\videos\`, infer the next episode number from existing `第X期：...` folders, and remind the user before proceeding.
 - Compose the project folder name as `第X期：{视频标题}`.
 
-For Filmora project output, place a known-good minimal Filmora `ProjectFolder` inside the current video project directory. `generate_filmora_project.py` will find it automatically when `edl.json` is under that project directory, including `edit\edl.json`.
+For Filmora project output, place a known-good minimal Filmora `ProjectFolder` inside the current video project directory. `generate_filmora_project.py` will find it automatically when `edl.json` is under that project directory, including `Rough\edl.json`.
 
 ## The process
 
@@ -269,7 +287,7 @@ Pick the engine per animation slot. Do not default to Remotion just because the 
 - **Manim** — formal diagrams, state machines, equation derivations, graph morphs. Read `skills/manim-video/SKILL.md` and its references for depth.
 - **PIL + PNG sequence + ffmpeg** — simple overlay cards: counters, typewriter text, single bar reveals, progressive draws. Fast to iterate, any aesthetic you want. The launch video used this.
 
-For HyperFrames slots, scaffold the slot inside `edit/animations/slot_<id>/` with `npx --yes hyperframes init . --example blank --non-interactive --skip-skills`, build the HTML composition there, run the HyperFrames checks that fit the slot (`lint`, `validate`, and a draft render when practical), then produce the final overlay video with `npx --yes hyperframes render . -o render.mp4` or `--format webm -o render.webm` when alpha is required. Point the EDL overlay `file` at the actual rendered path.
+For HyperFrames slots, scaffold the slot inside `Rough\animations\slot_<id>\` with `npx --yes hyperframes init . --example blank --non-interactive --skip-skills`, build the HTML composition there, run the HyperFrames checks that fit the slot (`lint`, `validate`, and a draft render when practical), then produce the final overlay video with `npx --yes hyperframes render . -o render.mp4` or `--format webm -o render.webm` when alpha is required. Point the EDL overlay `file` at the actual rendered path.
 
 For Remotion slots, keep the Remotion project isolated inside the same slot directory, scaffold with `npx create-video@latest` or install Remotion locally there, render the composition to `render.mp4` with the project-local `remotion render` command, and verify duration and dimensions with `ffprobe`.
 
@@ -311,7 +329,7 @@ This is one style. If the brand is warm and serif, use that. If it's colorful an
 **Parallel sub-agent brief** — each animation is one sub-agent spawned via the `Agent` tool. Each prompt is self-contained (sub-agents have no parent context). Include:
 
 1. One-sentence goal: *"Build ONE animation: [spec]. Nothing else."*
-2. Absolute output path (`<edit>/animations/slot_<id>/render.mp4`)
+2. Absolute output path (`Rough\animations\slot_<id>\render.mp4`)
 3. Exact technical spec: resolution, fps, codec, pix_fmt, CRF, duration
 4. Style palette as concrete values (RGB tuples, hex, or reference to a design system)
 5. Font path with index
@@ -341,9 +359,9 @@ Match the source unless the user asked for something specific. Common targets: `
   ],
   "grade": "warm_cinematic",
   "overlays": [
-    {"file": "edit/animations/slot_1/render.mp4", "start_in_output": 0.0, "duration": 5.0}
+    {"file": "Rough/animations/slot_1/render.mp4", "start_in_output": 0.0, "duration": 5.0}
   ],
-  "subtitles": "edit/master.srt",
+  "subtitles": "Sub/master.srt",
   "total_duration_s": 87.4
 }
 ```
@@ -352,7 +370,7 @@ Match the source unless the user asked for something specific. Common targets: `
 
 ## Memory — `project.md`
 
-Append one section per session at `<edit>/project.md`:
+Append one section per session at `Rough\project.md`:
 
 ```markdown
 ## Session N — YYYY-MM-DD
@@ -363,7 +381,7 @@ Append one section per session at `<edit>/project.md`:
 **Outstanding:** deferred items
 ```
 
-On startup, read `project.md` if it exists and summarize the last session in one sentence before asking whether to continue.
+On startup, read `Rough\project.md` if it exists and summarize the last session in one sentence before asking whether to continue.
 
 ## Anti-patterns
 

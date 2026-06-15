@@ -34,28 +34,28 @@ D:\work\OPC\videos\{第X期：视频标题}\
 User-shot originals live in:
 
 ```text
-D:\work\OPC\videos\{第X期：视频标题}\Raw Footage\
+D:\work\OPC\videos\{第X期：视频标题}\Raw\
 ```
 
-Treat `Raw Footage\` as read-only source/reference material. Do not create Remotion projects there, do not render into it, and do not overwrite or normalize files in place. If a Remotion material needs visual reference from an original recording, copy only the required still/reference excerpt into the material workspace `reference\` or use processed clips supplied from `edit\`.
+Treat `Raw\` as read-only source/reference material. Do not create Remotion projects there, do not render into it, and do not overwrite or normalize files in place. If a Remotion material needs visual reference from an original recording, copy only the required still/reference excerpt into the material workspace `reference\` or use processed clips supplied from `Rough\`.
 
 Resolve `{第X期：视频标题}` using this priority:
 
 1. Use the explicit video project folder if the user provides it.
-2. If `motion_request_list.md` is under `D:\work\OPC\videos\...\edit\handoff\`, use that parent video project folder.
+2. If `motion_request_list.md` is under `D:\work\OPC\videos\...\video scripts\` or `D:\work\OPC\videos\...\Rough\`, use that parent video project folder.
 3. If the user provides only an episode number and title, compose `D:\work\OPC\videos\{第X期：视频标题}\`.
 4. If the episode number is missing, inspect existing folders under `D:\work\OPC\videos\`, infer the next `第X期`, and state the inferred project folder before writing files.
 
 Prefer this input path:
 
 ```text
-D:\work\OPC\videos\{第X期：视频标题}\edit\handoff\motion_request_list.md
+D:\work\OPC\videos\{第X期：视频标题}\video scripts\motion_request_list.md
 ```
 
 For each motion request, create one material workspace:
 
 ```text
-D:\work\OPC\videos\{第X期：视频标题}\edit\remotion\MotionXX_CompositionName\
+D:\work\OPC\videos\{第X期：视频标题}\Polished\Remotion\MotionXX_CompositionName\
 ├── implementation_plan.md
 ├── remotion-project\
 ├── reference\
@@ -230,7 +230,7 @@ Avoid CSS animation, CSS transition, `setTimeout`, `requestAnimationFrame`, and 
 When creating or modifying a Remotion project, prefer:
 
 ```text
-<video_project>/edit/remotion/MotionXX_CompositionName/
+<video_project>/Polished/Remotion/MotionXX_CompositionName/
   implementation_plan.md
   remotion-project/
     src/
@@ -253,7 +253,7 @@ When using acquired media, copy processed assets from `<video_project>\assets\..
 
 For every implemented material, provide commands for Studio preview, still check, MP4 insert, transparent WebM overlay, PNG sequence, and ProRes 4444 transparent video when useful for editing software.
 
-Run Remotion commands from `<video_project>\edit\remotion\MotionXX_CompositionName\remotion-project\`. Render outputs to the sibling `..\out\` folder so Filmora imports from a stable project-local path.
+Run Remotion commands from `<video_project>\Polished\Remotion\MotionXX_CompositionName\remotion-project\`. Render outputs to the sibling `..\out\` folder so Filmora imports from a stable project-local path.
 
 Use `references/export-formats.md` for command templates.
 
