@@ -158,18 +158,25 @@ For Filmora project output, place a known-good minimal Filmora `ProjectFolder` i
 ## The process
 
 1. **Inventory.** `ffprobe` every source. Transcribe all sources.
-   - **Whisper + Fun-ASR (local, default)**: `transcribe_batch.py` on the directory. `--language zh` for Chinese. `--whisper-model medium` recommended for 6GB GPUs (large-v3 too slow). `pack_transcripts.py` to produce `takes_packed.md`.
-   - For AI剪口播 review UI compatibility, convert Whisper transcript JSON to `subtitles_words.json` format (word-level array with `start`/`end`/`text`/`isGap` fields), then run `gen_analysis.js` to produce sentence-level analysis.
+   - **Whisper + Fun-ASR (local, default)**: `transcribe_batch.py` on the directory. `--language zh` for Chinese. `--whisper-model medium` recommended for 6GB GPUs (large-v3 too slow).
+   - Convert Whisper transcript JSON to `subtitles_words.json` format via `helpers/whisper_to_subtitles_words.py` for AI剪口播 compatibility.
    - Sample one or two `timeline_view`s for a visual first impression.
 2. **Pre-scan for problems.** Two-tier error detection:
    - **Tier 1 (script)**: Run `auto_filler.js` to auto-detect filler words (呃/嗯/额/诶, 句首过渡词, 句尾废词). No AI needed — safe, fast, deterministic.
    - **Tier 2 (AI)**: Read `analysis.txt` + 用户习惯/规则.md. Identify: A1 重复重说, A2 残句/卡顿, B3 冗余引导短语, B4 句中重说 (delete前半段). Conservative principle: **漏删优于过删**.
-   - Also note verbal slips, obvious mis-speaks, or phrasings to avoid. Feed into the editor brief.
-   - **Retake markers**: If the speaker says "重录", "不要", "pass", "cut", "again", or "最终版", treat as discard/keep signal per the recording markers rules below.
+   - **Retake markers**: If the speaker says "重录", "不要", "pass", "cut", "again", or "最终版", treat as discard/keep signal.
 3. **Converse.** Describe what you see. Ask questions shaped by the material. Collect: content type, target length/aspect, output preference (**剪映 draft via jianying-toolkit**, direct render, or Filmora project).
 4. **Propose strategy.** 4–8 sentences: shape, take choices, cut direction, animation plan, grade direction, subtitle style, length estimate. **Wait for confirmation.**
-5. **Execute.** Produce cut decisions via compute_keeps → finalKeeps. Then output:
-   - **Option A (剪映 draft — recommended):** Use `jianying-toolkit` to create draft, add_video per keep segment, add_subtitle from `Sub/master.srt`, add_audio for music, then save_draft to 剪映 draft folder. Opens directly in 剪映专业版.
+5. **Rough cut.** Execute cut decisions:
+   - `refine_boundaries.js` → energy reclaim (fix ASR timestamp over-extension)
+   - `compute_keeps.js` → finalKeeps (silence snapping + padding + internal silence split)
+   - Save finalKeeps to `Rough\finalKeeps_{source}.json` for subtitle calibration
+6. **Subtitle calibration (after cut, not before).** Generate `Sub/master.srt` with cut-timeline timestamps:
+   - `python helpers/align_to_manuscript.py <video_dir> <subtitles_words.json> <output_dir> --final-keeps <finalKeeps.json>`
+   - The `--final-keeps` flag filters words to kept segments only and remaps timestamps to the cut timeline
+   - Output SRT timestamps match the cut video, not the original recording
+7. **Output.** Based on user preference:
+   - **Option A (剪映 draft — recommended):** Use `jianying-toolkit` to create draft, add_video per keep segment, add_subtitle from `Sub/master.srt`, add_audio for music, then save_draft to 剪映 draft folder.
    - **Option B (Direct render):** Compose via `render.py` → `Final/video_final.mp4`.
    - **Option C (Filmora project):** Generate `.wfpx` via `generate_filmora_project.py`.
 6. **Preview.** `render.py --preview` (for direct render) or verify `.wfpx` file exists (for Filmora project).
@@ -282,13 +289,20 @@ For anything else — portraiture, nature, product, music video, documentary —
 
 Hard rules: apply **per-segment during extraction** (not post-concat, which re-encodes twice). Never go aggressive without testing skin tones.
 
-## Subtitles (when requested)
+## Subtitles (after rough cut)
 
-Subtitles have three dimensions worth reasoning about: **chunking** (1/2/3/sentence per line), **case** (UPPER/Title/Natural), and **placement** (margin from bottom). The right combo depends on content.
+**Important**: Subtitles are generated AFTER rough cut, not before. Generating subtitles on the original timeline then cutting would misalign all timestamps. The `--final-keeps` flag in `align_to_manuscript.py` handles the timeline remapping automatically.
 
-**Manuscript-calibrated SRT (recommended for manuscript-driven videos)**: Run `align_to_manuscript.py` to generate `Sub\master.srt` with corrected text from the manuscript. This fixes ASR recognition errors and aligns subtitle boundaries to intended sentence structure. The SRT uses Whisper timestamps for timing accuracy.
+**Manuscript-calibrated SRT (recommended for manuscript-driven videos)**:
 
-**Render-time subtitles**: Alternatively, `render.py --build-subtitles` generates SRT from raw Whisper transcript (no manuscript correction). Use this when no manuscript is available.
+```bash
+# After compute_keeps produces finalKeeps:
+python helpers/align_to_manuscript.py <video_dir> <subtitles_words.json> <output_dir> --final-keeps <finalKeeps.json>
+```
+
+This filters words to kept segments only, remaps timestamps to the cut timeline, then aligns to the manuscript. The output SRT at `Sub/master.srt` has timestamps matching the cut video.
+
+**Without manuscript**: `render.py --build-subtitles` generates SRT from raw Whisper transcript (no manuscript correction, no cut-timeline remapping).
 
 **Worked styles** — pick, adapt, or invent:
 

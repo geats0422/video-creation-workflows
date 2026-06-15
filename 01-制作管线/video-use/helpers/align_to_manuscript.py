@@ -137,6 +137,68 @@ def _flush_sentences(sentences: list, text: str, section: str):
             })
 
 
+# ─── Cut-timeline remapping ───────────────────────────────────────────
+
+def remap_words_to_cut_timeline(
+    words: List[dict],
+    final_keeps: List[dict],
+) -> List[dict]:
+    """
+    Filter words to only those within finalKeeps segments, and remap
+    timestamps from the original recording timeline to the cut timeline.
+    
+    Example:
+      finalKeeps = [{start:0, end:10}, {start:15, end:25}]
+      Word at original time 17 → new time 12 (10 + (17-15))
+    
+    Args:
+        words: Original subtitles_words.json array (with isGap entries)
+        final_keeps: List of {start, end} keep segments (sorted)
+    
+    Returns:
+        New words array with remapped timestamps, only kept segments
+    """
+    if not final_keeps:
+        return words
+    
+    # Sort keeps by start time
+    keeps = sorted(final_keeps, key=lambda k: k["start"])
+    
+    # Build remapped word list
+    result = []
+    cumulative_kept = 0.0
+    
+    for keep in keeps:
+        ks = keep["start"]
+        ke = keep["end"]
+        keep_duration = ke - ks
+        
+        for w in words:
+            w_start = w.get("start", 0)
+            w_end = w.get("end", 0)
+            
+            # Word must be fully within the keep segment
+            if w_start >= ks and w_end <= ke:
+                new_word = dict(w)
+                new_word["start"] = cumulative_kept + (w_start - ks)
+                new_word["end"] = cumulative_kept + (w_end - ks)
+                result.append(new_word)
+            # Word partially overlaps — keep the overlapping part
+            elif w_start < ke and w_end > ks and w.get("isGap"):
+                # Keep gap if it overlaps
+                gap_start = max(w_start, ks)
+                gap_end = min(w_end, ke)
+                if gap_end > gap_start:
+                    new_word = dict(w)
+                    new_word["start"] = cumulative_kept + (gap_start - ks)
+                    new_word["end"] = cumulative_kept + (gap_end - ks)
+                    result.append(new_word)
+        
+        cumulative_kept += keep_duration
+    
+    return result
+
+
 # ─── Whisper flattening ───────────────────────────────────────────────
 
 def flatten_whisper(words: List[dict]) -> Tuple[str, List[Tuple[int, int, float, float]]]:
@@ -373,7 +435,17 @@ def main():
     video_dir = Path(sys.argv[1])
     words_file = Path(sys.argv[2])
     output_dir = Path(sys.argv[3])
-    manuscript_choice = int(sys.argv[4]) if len(sys.argv) > 4 else 0
+    manuscript_choice = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4].isdigit() else 0
+    
+    # Optional: --final-keeps <json_file> for post-cut subtitle calibration
+    final_keeps = None
+    for i, arg in enumerate(sys.argv):
+        if arg == "--final-keeps" and i + 1 < len(sys.argv):
+            keeps_path = Path(sys.argv[i + 1])
+            if keeps_path.exists():
+                final_keeps = json.loads(keeps_path.read_text(encoding="utf-8"))
+                print(f"✂ 粗剪后模式: {len(final_keeps)} 个保留段")
+            break
     
     # 1. Find manuscript
     manuscripts = find_manuscripts(video_dir)
@@ -396,6 +468,13 @@ def main():
             break
         except (UnicodeDecodeError, json.JSONDecodeError):
             continue
+    
+    # 4. If final-keeps provided, filter + remap to cut timeline
+    if final_keeps:
+        original_count = sum(1 for w in words if not w.get("isGap"))
+        words = remap_words_to_cut_timeline(words, final_keeps)
+        cut_count = sum(1 for w in words if not w.get("isGap"))
+        print(f"✂ 词数: {original_count} → {cut_count} (粗剪后)")
     
     whisper_chars, char_map = flatten_whisper(words)
     print(f"🎤 Whisper 词数: {sum(1 for w in words if not w.get('isGap'))}")
