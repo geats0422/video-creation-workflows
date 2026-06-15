@@ -105,11 +105,12 @@ AI剪口播 scripts live at `D:\work\Huanyu Code\template\ai-jian-koubo\scripts\
 - **`grade.py <in> -o <out>`** — ffmpeg filter chain grade. Presets + `--filter '<raw>'` for custom.
 - **`generate_filmora_project.py <edl.json> -o <out>`** — Generate Wondershare Filmora project (.wfpx) from EDL. It auto-detects the nearest `ProjectFolder` beside the EDL, matching the project layout `D:\work\OPC\videos\{第X期：视频标题}\ProjectFolder`. Fallback template is `D:\work\OPC\video-use\123\ProjectFolder`. Use `--template-folder <ProjectFolder>` only to override auto-detection. `--name "Project Name"` optional.
 
-**AI剪口播 helpers** (local review + FCPXML — no cloud needed):
+**AI剪口播 helpers** (local processing — no cloud needed):
 
-- **Filler detection**: `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\auto_filler.js" <sentence_map> <words> <speech_errors>` — Detects 呃/嗯/额/诶, 句首过渡词, 句尾废词 automatically. Requires transcription output in `subtitles_words.json` format — convert Whisper `transcripts/*.json` to this format first.
-- **Review UI**: `node "...generate_review.js" <words> <auto_selected> <audio> <out_dir>` + `bash "...serve_review.sh" <review_dir> <video> <server_script>` — Web-based waveform review. User clicks to delete, previews exact cut frames, exports FCPXML.
-- **FCPXML export**: The review UI's "导出 FCPXML" button generates `*_cut.fcpxml` using `lib/fcpxml.js`. For batch/EDL-driven FCPXML without the review UI, call `lib/fcpxml.js` directly from Node. Output is compatible with **剪映专业版** (文件 → 导入 → Final Cut Pro XML) and **Final Cut Pro** (double-click .fcpxml).
+- **Manuscript alignment** (recommended): `python helpers/align_to_manuscript.py <video_dir> <subtitles_words.json> <output_dir> [manuscript_index]` — Auto-detects manuscript in `scripts/`, aligns Whisper transcript to manuscript text via difflib. Outputs corrected `analysis.txt` + `sentence_map.json` + `Sub\master.srt` (文稿校准字幕). Fixes ASR errors (教授服→首辅). Replaces `gen_analysis.js` when manuscript is available.
+- **Filler detection**: `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\auto_filler.js" <sentence_map> <words> <speech_errors>` — Detects 呃/嗯/额/诶, 句首过渡词, 句尾废词 automatically. Requires `subtitles_words.json` format — use `helpers/whisper_to_subtitles_words.py` to convert from Whisper transcript.
+- **Cut algorithm**: `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\lib\compute_keeps.js"` — 4-layer precision cutting (merge → silence snap → pad → internal silence split).
+- **Energy reclaim**: `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\lib\refine_boundaries.js"` — Fixes ASR timestamp over-extension via PCM energy analysis. Reclaims breath/silence swallowed by word boundaries.
 
 For animations, create `Rough\animations\slot_<id>\` with `Bash` and spawn a sub-agent via the `Agent` tool.
 
@@ -288,6 +289,10 @@ Hard rules: apply **per-segment during extraction** (not post-concat, which re-e
 ## Subtitles (when requested)
 
 Subtitles have three dimensions worth reasoning about: **chunking** (1/2/3/sentence per line), **case** (UPPER/Title/Natural), and **placement** (margin from bottom). The right combo depends on content.
+
+**Manuscript-calibrated SRT (recommended for manuscript-driven videos)**: Run `align_to_manuscript.py` to generate `Sub\master.srt` with corrected text from the manuscript. This fixes ASR recognition errors and aligns subtitle boundaries to intended sentence structure. The SRT uses Whisper timestamps for timing accuracy.
+
+**Render-time subtitles**: Alternatively, `render.py --build-subtitles` generates SRT from raw Whisper transcript (no manuscript correction). Use this when no manuscript is available.
 
 **Worked styles** — pick, adapt, or invent:
 

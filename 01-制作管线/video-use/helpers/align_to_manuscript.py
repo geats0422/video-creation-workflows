@@ -271,8 +271,9 @@ def generate_outputs(
     aligned_sentences: List[dict],
     words: List[dict],
     output_dir: Path,
+    video_dir: Path = None,
 ):
-    """Generate analysis.txt, sentence_map.json, auto_selected.json."""
+    """Generate analysis.txt, sentence_map.json, auto_selected.json, SRT."""
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Filter to matched sentences only
@@ -296,6 +297,15 @@ def generate_outputs(
     (output_dir / "auto_selected.json").write_text(
         json.dumps(gap_indices, indent=2), encoding="utf-8"
     )
+    
+    # SRT subtitle file — output to Sub/ directory
+    if video_dir:
+        sub_dir = video_dir / "Sub"
+        sub_dir.mkdir(parents=True, exist_ok=True)
+        srt_path = sub_dir / "master.srt"
+        srt_content = _generate_srt(matched)
+        srt_path.write_text(srt_content, encoding="utf-8")
+        print(f"  SRT: {srt_path} ({len(matched)} entries)")
     
     # alignment_report.json: detailed alignment info
     report = {
@@ -323,6 +333,38 @@ def generate_outputs(
     )
     
     return report
+
+
+def _format_srt_time(seconds: float) -> str:
+    """Format seconds as SRT timestamp: HH:MM:SS,mmm"""
+    hrs = int(seconds // 3600)
+    mins = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    ms = int((seconds * 1000) % 1000)
+    return f"{hrs:02d}:{mins:02d}:{secs:02d},{ms:03d}"
+
+
+def _generate_srt(sentences: List[dict]) -> str:
+    """Generate SRT subtitle content from aligned sentences."""
+    entries = []
+    for i, sent in enumerate(sentences):
+        start = sent.get("start_time", 0)
+        end = sent.get("end_time", start + 1)
+        
+        # Minimum display duration: 1 second
+        if end - start < 1.0:
+            end = start + 1.0
+        
+        # Cap gap to next subtitle at 0.5s
+        if i + 1 < len(sentences):
+            next_start = sentences[i + 1].get("start_time", end)
+            if next_start - end < 0.5:
+                end = next_start - 0.05 if next_start > start + 0.3 else end
+        
+        text = sent["text"].strip()
+        entries.append(f"{i + 1}\n{_format_srt_time(start)} --> {_format_srt_time(end)}\n{text}\n")
+    
+    return "\n".join(entries)
 
 
 # ─── Main ─────────────────────────────────────────────────────────────
@@ -371,12 +413,13 @@ def main():
     avg_conf = sum(s["confidence"] for s in matched) / len(matched) if matched else 0
     print(f"  📊 平均置信度: {avg_conf:.1%}")
     
-    # 5. Generate outputs
-    report = generate_outputs(aligned, words, output_dir)
-    print(f"\n📁 输出目录: {output_dir}")
+    # 5. Generate outputs (analysis + SRT)
+    report = generate_outputs(aligned, words, output_dir, video_dir)
+    print(f"\n📁 分析输出: {output_dir}")
     print(f"  analysis.txt ({len(matched)} 句)")
     print(f"  sentence_map.json ({len(matched)} 段)")
-    print(f"  auto_selected.json ({len(report.get('low_confidence_sentences', []))} 低置信)")
+    if video_dir:
+        print(f"  Sub/master.srt → {video_dir / 'Sub' / 'master.srt'}")
     
     # Show unmatched
     if unmatched:
