@@ -81,19 +81,18 @@ First-time install lives in `install.md` (clone, deps, ffmpeg, skill registratio
 - `yt-dlp`, HyperFrames, Remotion, Manim installed only on first use.
 - First-use animation setup happens inside the slot directory, never at the video-use repo root. HyperFrames can be invoked with `npx --yes hyperframes ...`; Remotion can be scaffolded with `npx create-video@latest` or installed as a project-local dependency before using its `remotion render` command.
 - This skill vendors `skills/manim-video/`. Read its SKILL.md when building a Manim slot.
-- **AI剪口播 integration** (recommended for Chinese content): companion skill at `D:\work\Huanyu Code\template\ai-jian-koubo`. Provides web-based waveform review UI, FCPXML export (剪映 + FCP), speech error auto-detection, and self-evolution. All processing is local — no cloud API needed.
+- **AI剪口播 integration** (recommended for Chinese content): companion skill at `D:\work\Huanyu Code\template\ai-jian-koubo`. Provides headless speech error detection (auto_filler.js), precision cut algorithm (compute_keeps.js), energy reclaim (refine_boundaries.js), and self-evolution rules. All processing is local — no cloud API, no web server.
 
 Helpers (`helpers/transcribe.py`, `helpers/render.py`, etc.) live alongside this SKILL.md. Resolve their paths relative to the directory containing this file — the skill is typically symlinked at `~/.claude/skills/video-use/` or `~/.codex/skills/video-use/`.
 
-AI剪口播 scripts live at `D:\work\Huanyu Code\template\ai-jian-koubo\scripts\`. Reference them by absolute path when invoking. Key scripts (all local, no cloud):
+AI剪口播 scripts live at `D:\work\Huanyu Code\template\ai-jian-koubo\scripts\`. Key scripts (all local, no cloud, no server):
 
 - `auto_filler.js` — rule-based filler word detection (no AI needed)
 - `gen_analysis.js` — sentence-level analysis for AI error detection
-- `generate_review.js` — web review UI generator (waveform + click-to-delete)
-- `serve_review.sh` — review server launcher (auto port, opens browser)
 - `lib/compute_keeps.js` — cut algorithm (silence snapping + internal silence split)
 - `lib/refine_boundaries.js` — energy reclaim (fixes ASR timestamp over-extension)
-- `lib/fcpxml.js` — FCPXML 1.8 generator (剪映 + Final Cut Pro)
+
+**jianying-toolkit** (`D:\work\OPC\.opencode\skill\jianying-toolkit\scripts\jianying.py`): generates 剪映 native draft files. No FCPXML, no format conversion — the draft opens directly in 剪映专业版. Commands: create_draft, add_video, add_audio, add_text, add_subtitle, add_image, add_effect, add_sticker, save_draft.
 
 ## Helpers
 
@@ -167,15 +166,12 @@ For Filmora project output, place a known-good minimal Filmora `ProjectFolder` i
    - **Tier 2 (AI)**: Read `analysis.txt` + 用户习惯/规则.md. Identify: A1 重复重说, A2 残句/卡顿, B3 冗余引导短语, B4 句中重说 (delete前半段). Conservative principle: **漏删优于过删**.
    - Also note verbal slips, obvious mis-speaks, or phrasings to avoid. Feed into the editor brief.
    - **Retake markers**: If the speaker says "重录", "不要", "pass", "cut", "again", or "最终版", treat as discard/keep signal per the recording markers rules below.
-3. **Converse + Review.** Describe what you see. Ask questions shaped by the material. Collect: content type, target length/aspect, output preference (**direct render, Filmora project, FCPXML for 剪映/FCP**, or web review first then export).
-   - **Web review mode (recommended for Chinese talking-head)**: Generate review UI via `generate_review.js` + `serve_review.sh`. User gets a local webpage with three-color waveform (gray=silence, red=delete, yellow=algorithm extra), click-to-delete transcript, audio playback, and real-time cut frame preview. User clicks "导出 FCPXML" when satisfied.
-   - **Console mode (fallback)**: Propose strategy in 4-8 sentences. Wait for confirmation.
-4. **Propose strategy** (console mode only — web review mode skips this). 4–8 sentences: shape, take choices, cut direction, animation plan, grade direction, subtitle style, length estimate. **Wait for confirmation.**
-5. **Execute.** Produce `edl.json` via the editor sub-agent brief. Drill into `timeline_view` at ambiguous moments. Build animations in parallel sub-agents. Apply grade per-segment.
-   - **Option A (Direct render):** Compose via `render.py`.
-   - **Option B (Filmora project):** Generate `.wfpx` via `generate_filmora_project.py`.
-   - **Option C (FCPXML — 剪映/FCP):** Generate `*_cut.fcpxml` via `lib/fcpxml.js` (from review UI export or direct call). Import to 剪映 (文件 → 导入 → Final Cut Pro XML) or FCP (double-click).
-   - **Option D (Multiple):** Generate both `.wfpx` + `.fcpxml` + `preview.mp4` if the user wants flexibility.
+3. **Converse.** Describe what you see. Ask questions shaped by the material. Collect: content type, target length/aspect, output preference (**剪映 draft via jianying-toolkit**, direct render, or Filmora project).
+4. **Propose strategy.** 4–8 sentences: shape, take choices, cut direction, animation plan, grade direction, subtitle style, length estimate. **Wait for confirmation.**
+5. **Execute.** Produce cut decisions via compute_keeps → finalKeeps. Then output:
+   - **Option A (剪映 draft — recommended):** Use `jianying-toolkit` to create draft, add_video per keep segment, add_subtitle from `Sub/master.srt`, add_audio for music, then save_draft to 剪映 draft folder. Opens directly in 剪映专业版.
+   - **Option B (Direct render):** Compose via `render.py` → `Final/video_final.mp4`.
+   - **Option C (Filmora project):** Generate `.wfpx` via `generate_filmora_project.py`.
 6. **Preview.** `render.py --preview` (for direct render) or verify `.wfpx` file exists (for Filmora project).
 7. **Self-eval (before showing the user).** For direct render: Run `timeline_view` on the **rendered output** (not the sources) at every cut boundary (±1.5s window). Check each image for:
    - Visual discontinuity / flash / jump at the cut
@@ -423,20 +419,19 @@ Match the source unless the user asked for something specific. Common targets: `
 
 `grade` is a preset name or raw ffmpeg filter. `overlays` are rendered animation clips. `subtitles` is optional and applied LAST.
 
-**FCPXML output** (alternative to EDL for 剪映/FCP): When using the AI剪口播 review UI, the export produces `*_cut.fcpxml` directly — no EDL needed. For EDL-to-FCPXML conversion, use `lib/fcpxml.js` `buildFcpxml({ videoFile, deleteList, silencePeriods, cutOpts })`. The FCPXML uses frame-accurate ticks (frame × fpsDen), references a single source asset, and imports to 剪映 (文件 → 导入 → Final Cut Pro XML) or FCP (double-click).
+**剪映 draft output** (recommended for 剪映 users): Use `jianying-toolkit` to generate a native 剪映 draft directly from finalKeeps. No EDL-to-FCPXML conversion, no import failures — the draft is 剪映's native JSON format. See `jianying-toolkit/SKILL.md` for command reference.
 
 ## Self-evolution (from AI剪口播)
 
-When the user exports from the review UI, a `review_log.json` is written alongside the FCPXML. It records: AI initial selections, user final selections, cut parameters, and word-level diff between the two.
+When cut decisions are finalized, the `review_log.json` records: AI initial selections, final selections, cut parameters, and word-level diff.
 
 **Learning trigger** (user-explicit, never automatic): User says "已导出，学一下" or similar.
 
 1. Read `review_log.json` from the project's review directory.
 2. Read existing rules: `用户习惯/规则.md` (base) + `用户习惯/经验规则.md` (learned).
-3. For each `diff.aiOnly` (AI deleted, user kept — possible over-cut) and `diff.userOnly` (user deleted, AI missed — possible under-cut), abstract generalizable preferences.
-4. Check if any diff violates existing rules — flag for user judgment.
-5. Present candidates: new rules, refinements, merges. **Wait for user confirmation.**
-6. Write confirmed rules to `经验规则.md` with source tag `(学于 <video> YYYY-MM-DD；已确认)`.
+3. For each `diff.aiOnly` and `diff.userOnly`, abstract generalizable preferences.
+4. Present candidates: new rules, refinements, merges. **Wait for user confirmation.**
+5. Write confirmed rules to `经验规则.md` with source tag.
 
 Never auto-write rules. Never固化 single-context exceptions into general rules.
 
