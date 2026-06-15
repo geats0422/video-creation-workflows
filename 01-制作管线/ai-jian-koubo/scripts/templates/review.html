@@ -831,7 +831,9 @@
       <span class="time-display"><span id="timeCur">00:00</span><span class="sep">/</span><span id="timeTot">00:00</span></span>
     </div>
     <div class="tb-right">
-      <button class="primary" onclick="exportFCPXML()">导出 FCPXML</button>
+      <button class="primary" onclick="exportFCPXML()" title="兼容 Final Cut Pro / Final Cut Pro XML 导入">导出 FCPXML</button>
+      <div class="tb-sep"></div>
+      <button class="primary" onclick="exportPrproj()" style="background:#ff5b00" title="剪映专业版 → 首页 → 导入工程 → 选择此文件">导出 .prproj (剪映)</button>
       <div class="tb-sep"></div>
       <button class="danger" onclick="clearAll()" title="清空选择">清空</button>
     </div>
@@ -1876,6 +1878,63 @@
           a.click();
           URL.revokeObjectURL(url);
           alert(`✅ FCPXML 已导出\n\n📁 文件: ${fileName}\n🎬 保留片段: ${data.segments} 个\n\n直接拖入 Final Cut Pro 即可`);
+        } else {
+          alert('❌ 导出失败: ' + data.error);
+        }
+      } catch (err) {
+        alert('❌ 请求失败: ' + err.message + '\n\n请确保使用 review_server.js 启动服务');
+      }
+    }
+
+    // 计算 keep 段（删除段的取反），传给 /api/prproj
+    function computeFinalKeepsClient(deleteList) {
+      const dur = (typeof duration !== 'undefined' && duration) ? duration : 0;
+      if (!deleteList.length) return [{ start: 0, end: dur }];
+      const sorted = deleteList.slice().sort((a, b) => a.start - b.start);
+      const keeps = [];
+      let cursor = 0;
+      for (const seg of sorted) {
+        if (seg.start > cursor) keeps.push({ start: cursor, end: seg.start });
+        cursor = Math.max(cursor, seg.end);
+      }
+      if (cursor < dur) keeps.push({ start: cursor, end: dur });
+      return keeps;
+    }
+
+    // 导出 Premiere Pro .prproj 工程（剪映专业版可导入）
+    async function exportPrproj() {
+      const segments = getDeleteSegments();
+      const finalKeeps = computeFinalKeepsClient(segments);
+      if (!finalKeeps.length) { alert('没有可保留的片段'); return; }
+
+      const finalSelected = [...selected]
+        .map(id => parseInt(id.replace('word-', ''), 10))
+        .filter(n => !Number.isNaN(n))
+        .sort((a, b) => a - b);
+
+      try {
+        const res = await fetch('/api/prproj', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            finalKeeps: finalKeeps.map(k => ({ start: k.start, end: k.end })),
+            finalSelected,
+            duration: (typeof duration !== 'undefined') ? duration : 0
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // 下载 .prproj
+          const fileName = data.output.split(/[\\/]/).pop();
+          const dlRes = await fetch('/api/download/' + encodeURIComponent(data.output));
+          const blob = await dlRes.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+          alert(`✅ .prproj 已导出（剪映可导入）\n\n📁 文件: ${fileName}\n🎬 保留片段: ${data.segments} 个\n\n📥 剪映专业版导入步骤：\n1. 首页右下角「导入工程」\n2. 选择此 .prproj 文件\n3. 视频会带剪切决策导入时间线`);
         } else {
           alert('❌ 导出失败: ' + data.error);
         }

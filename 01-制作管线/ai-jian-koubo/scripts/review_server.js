@@ -207,6 +207,197 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: 导出 Premiere Pro .prproj 工程（剪映专业版可导入）
+  if (req.method === 'POST' && req.url === '/api/prproj') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const parsed = JSON.parse(body);
+        const finalKeepsRaw = parsed.finalKeeps || [];
+        // Convert to delete list (inverse of keeps)
+        const dur = parsed.duration || 0;
+        const allKeeps = finalKeepsRaw.map(k => ({ start: parseFloat(k.start), end: parseFloat(k.end) }));
+        const merged = allKeeps.slice().sort((a, b) => a.start - b.start);
+
+        // Probe video
+        const { execSync } = require('child_process');
+        const probe = execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate -of csv=p=0 "${VIDEO_FILE}"`).toString().trim();
+        const parts = probe.replace(/,+$/, '').split(',');
+        const srcW = parseInt(parts[0]) || 1920;
+        const srcH = parseInt(parts[1]) || 1080;
+        const fpsParts = parts[2].split('/');
+        const fpsNum = parseInt(fpsParts[0]) || 30;
+        const fpsDen = fpsParts.length === 2 ? parseInt(fpsParts[1]) || 1 : 1;
+
+        const path = require('path');
+        const videoPathObj = VIDEO_FILE;
+        let pathurl = 'file:///' + videoPathObj.replace(/\\/g, '/');
+        pathurl = pathurl.split('').map(c => (
+          /[a-zA-Z0-9\-_.~/:]/.test(c) ? c : '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2).toUpperCase()
+        )).join('');
+
+        const escapeXml = (s) => s.replace(/[<>&'"]/g, c => ({
+          '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;'
+        }[c]));
+
+        const fileName = escapeXml(path.basename(videoPathObj));
+
+        // Build clipitems from keep segments
+        let currentFrame = 0;
+        const clipitemsV = [];
+        const clipitemsA = [];
+        allKeeps.forEach((seg, i) => {
+          const segDurFrames = Math.round((seg.end - seg.start) * fpsNum / fpsDen);
+          const startFrame = currentFrame;
+          const endFrame = startFrame + segDurFrames;
+          const name = `Scene-${String(i + 1).padStart(3, '0')}`;
+          const sourceIn = Math.round(seg.start * fpsNum / fpsDen);
+          const sourceOut = Math.round(seg.end * fpsNum / fpsDen);
+
+          clipitemsV.push(`          <clipitem id="clipitem-${i+1}">
+            <name>${name}</name>
+            <enabled>TRUE</enabled>
+            <duration>${segDurFrames}</duration>
+            <rate>
+              <timebase>${fpsNum}</timebase>
+              <ntsc>FALSE</ntsc>
+            </rate>
+            <start>${startFrame}</start>
+            <end>${endFrame}</end>
+            <in>0</in>
+            <out>${segDurFrames}</out>
+            <file id="file-1"/>
+            <source-in>${sourceIn}</source-in>
+            <source-out>${sourceOut}</source-out>
+          </clipitem>`);
+
+          clipitemsA.push(`          <clipitem id="audio-${i+1}">
+            <name>${name}</name>
+            <enabled>TRUE</enabled>
+            <duration>${segDurFrames}</duration>
+            <rate>
+              <timebase>${fpsNum}</timebase>
+              <ntsc>FALSE</ntsc>
+            </rate>
+            <start>${startFrame}</start>
+            <end>${endFrame}</end>
+            <in>0</in>
+            <out>${segDurFrames}</out>
+            <file id="file-1"/>
+            <source-in>${sourceIn}</source-in>
+            <source-out>${sourceOut}</source-out>
+          </clipitem>`);
+
+          currentFrame = endFrame;
+        });
+
+        const totalFrames = currentFrame;
+        const projectName = path.basename(videoPathObj, path.extname(videoPathObj)) + '_cut';
+        const totalDurSec = allKeeps.reduce((sum, k) => sum + (k.end - k.start), 0);
+        const sourceTotalFrames = Math.round(totalDurSec * fpsNum / fpsDen);
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xmeml>
+<xmeml version="4">
+  <sequence>
+    <name>${escapeXml(projectName)}</name>
+    <duration>${totalFrames}</duration>
+    <rate>
+      <timebase>${fpsNum}</timebase>
+      <ntsc>FALSE</ntsc>
+    </rate>
+    <media>
+      <video>
+        <track>
+${clipitemsV.join('\n')}
+        </track>
+      </video>
+      <audio>
+        <track>
+${clipitemsA.join('\n')}
+        </track>
+      </audio>
+    </media>
+  </sequence>
+  <resources>
+    <format id="format-1">
+      <samplecharacteristics>
+        <width>1920</width>
+        <height>1080</height>
+        <pixelaspectratio>square</pixelaspectratio>
+        <rate>
+          <timebase>${fpsNum}</timebase>
+        </rate>
+        <codec>
+          <name>Apple ProRes 422</name>
+          <appspecificdata>
+            <appname>Final Cut Pro</appname>
+            <appmanufacturer>Apple Inc.</appmanufacturer>
+            <appversion>10.4.6</appversion>
+            <data>
+              <qtcodec>avc1</qtcodec>
+            </data>
+          </appspecificdata>
+        </codec>
+      </samplecharacteristics>
+    </format>
+    <file id="file-1">
+      <name>${fileName}</name>
+      <pathurl>${pathurl}</pathurl>
+      <rate>
+        <timebase>${fpsNum}</timebase>
+        <ntsc>FALSE</ntsc>
+      </rate>
+      <duration>${sourceTotalFrames}</duration>
+      <media>
+        <video>
+          <samplecharacteristics>
+            <width>${srcW}</width>
+            <height>${srcH}</height>
+            <pixelaspectratio>square</pixelaspectratio>
+            <rate>
+              <timebase>${fpsNum}</timebase>
+            </rate>
+          </samplecharacteristics>
+        </video>
+        <audio>
+          <channelcount>2</channelcount>
+          <depth>16</depth>
+          <samplerate>48000</samplerate>
+        </audio>
+      </media>
+    </file>
+  </resources>
+</xmeml>
+`;
+
+        // Write .prproj
+        const prprojPath = path.resolve(path.basename(videoPathObj, path.extname(videoPathObj)) + '_cut.prproj');
+        fs.writeFileSync(prprojPath, '\ufeff' + xml, 'utf8');
+        console.log(`✅ 导出 .prproj: ${prprojPath} (${allKeeps.length} 片段)`);
+
+        // Also write FCPXML for FCP users
+        const fcpPath = path.resolve(path.basename(videoPathObj, path.extname(videoPathObj)) + '_cut.fcpxml');
+        fs.writeFileSync(fcpPath, '\ufeff' + xml, 'utf8');
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          output: prprojPath,
+          outputFcpxml: fcpPath,
+          segments: allKeeps.length,
+          message: '导出成功。剪映专业版：首页 → 导入工程 → 选择 .prproj 文件'
+        }));
+      } catch (err) {
+        console.error('❌ .prproj 导出失败:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // API: 下载文件
   if (req.method === 'GET' && req.url.startsWith('/api/download/')) {
     const encodedFileName = req.url.replace('/api/download/', '');
