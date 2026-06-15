@@ -81,13 +81,12 @@ First-time install lives in `install.md` (clone, deps, ffmpeg, skill registratio
 - `yt-dlp`, HyperFrames, Remotion, Manim installed only on first use.
 - First-use animation setup happens inside the slot directory, never at the video-use repo root. HyperFrames can be invoked with `npx --yes hyperframes ...`; Remotion can be scaffolded with `npx create-video@latest` or installed as a project-local dependency before using its `remotion render` command.
 - This skill vendors `skills/manim-video/`. Read its SKILL.md when building a Manim slot.
-- **AI剪口播 integration** (recommended for Chinese content): companion skill at `D:\work\Huanyu Code\template\ai-jian-koubo`. Provides Volcengine professional Chinese ASR (no GPU, 40h free), web-based waveform review UI, FCPXML export (剪映 + FCP), speech error auto-detection, and self-evolution. Configure `VOLCENGINE_API_KEY` in its `.env` before first use. Run `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\doctor.js"` to verify setup.
+- **AI剪口播 integration** (recommended for Chinese content): companion skill at `D:\work\Huanyu Code\template\ai-jian-koubo`. Provides web-based waveform review UI, FCPXML export (剪映 + FCP), speech error auto-detection, and self-evolution. All processing is local — no cloud API needed.
 
 Helpers (`helpers/transcribe.py`, `helpers/render.py`, etc.) live alongside this SKILL.md. Resolve their paths relative to the directory containing this file — the skill is typically symlinked at `~/.claude/skills/video-use/` or `~/.codex/skills/video-use/`.
 
-AI剪口播 scripts live at `D:\work\Huanyu Code\template\ai-jian-koubo\scripts\`. Reference them by absolute path when invoking. Key scripts:
+AI剪口播 scripts live at `D:\work\Huanyu Code\template\ai-jian-koubo\scripts\`. Reference them by absolute path when invoking. Key scripts (all local, no cloud):
 
-- `run_transcribe.sh` — Volcengine transcription (auto-rotates flash/standard engines)
 - `auto_filler.js` — rule-based filler word detection (no AI needed)
 - `gen_analysis.js` — sentence-level analysis for AI error detection
 - `generate_review.js` — web review UI generator (waveform + click-to-delete)
@@ -106,10 +105,9 @@ AI剪口播 scripts live at `D:\work\Huanyu Code\template\ai-jian-koubo\scripts\
 - **`grade.py <in> -o <out>`** — ffmpeg filter chain grade. Presets + `--filter '<raw>'` for custom.
 - **`generate_filmora_project.py <edl.json> -o <out>`** — Generate Wondershare Filmora project (.wfpx) from EDL. It auto-detects the nearest `ProjectFolder` beside the EDL, matching the project layout `D:\work\OPC\videos\{第X期：视频标题}\ProjectFolder`. Fallback template is `D:\work\OPC\video-use\123\ProjectFolder`. Use `--template-folder <ProjectFolder>` only to override auto-detection. `--name "Project Name"` optional.
 
-**AI剪口播 helpers** (Volcengine + review + FCPXML — prefer for Chinese content):
+**AI剪口播 helpers** (local review + FCPXML — no cloud needed):
 
-- **Volcengine transcription**: `bash "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\run_transcribe.sh" "<video>" "<output_dir>"` — Professional Chinese ASR. No GPU needed. Outputs `subtitles_words.json` (word-level timestamps) + `volcengine_v3_result.json`. Use `--flash` for极速版 only, `--v3-standard` for标准版 only. Default `auto` rotates both.
-- **Filler detection**: `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\auto_filler.js" <sentence_map> <words> <speech_errors>` — Detects 呃/嗯/额/诶, 句首过渡词, 句尾废词 automatically.
+- **Filler detection**: `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\auto_filler.js" <sentence_map> <words> <speech_errors>` — Detects 呃/嗯/额/诶, 句首过渡词, 句尾废词 automatically. Requires transcription output in `subtitles_words.json` format — convert Whisper `transcripts/*.json` to this format first.
 - **Review UI**: `node "...generate_review.js" <words> <auto_selected> <audio> <out_dir>` + `bash "...serve_review.sh" <review_dir> <video> <server_script>` — Web-based waveform review. User clicks to delete, previews exact cut frames, exports FCPXML.
 - **FCPXML export**: The review UI's "导出 FCPXML" button generates `*_cut.fcpxml` using `lib/fcpxml.js`. For batch/EDL-driven FCPXML without the review UI, call `lib/fcpxml.js` directly from Node. Output is compatible with **剪映专业版** (文件 → 导入 → Final Cut Pro XML) and **Final Cut Pro** (double-click .fcpxml).
 
@@ -160,8 +158,8 @@ For Filmora project output, place a known-good minimal Filmora `ProjectFolder` i
 ## The process
 
 1. **Inventory.** `ffprobe` every source. Transcribe all sources.
-   - **Chinese content (default)**: Use AI剪口播 Volcengine pipeline for accurate word-level ASR without GPU. Run `run_transcribe.sh` per source, then `gen_analysis.js` to produce sentence-level analysis. Copy resulting `subtitles_words.json` to `Rough\transcripts\` for caching.
-   - **Fallback (no Volcengine key, or non-Chinese)**: `transcribe_batch.py` on the directory with Whisper. `--whisper-model medium` recommended for 6GB GPUs. `pack_transcripts.py` to produce `takes_packed.md`.
+   - **Whisper + Fun-ASR (local, default)**: `transcribe_batch.py` on the directory. `--language zh` for Chinese. `--whisper-model medium` recommended for 6GB GPUs (large-v3 too slow). `pack_transcripts.py` to produce `takes_packed.md`.
+   - For AI剪口播 review UI compatibility, convert Whisper transcript JSON to `subtitles_words.json` format (word-level array with `start`/`end`/`text`/`isGap` fields), then run `gen_analysis.js` to produce sentence-level analysis.
    - Sample one or two `timeline_view`s for a visual first impression.
 2. **Pre-scan for problems.** Two-tier error detection:
    - **Tier 1 (script)**: Run `auto_filler.js` to auto-detect filler words (呃/嗯/额/诶, 句首过渡词, 句尾废词). No AI needed — safe, fast, deterministic.
@@ -193,7 +191,7 @@ For Filmora project output, place a known-good minimal Filmora `ProjectFolder` i
 
 - **Audio-first.** Candidate cuts from word boundaries and silence gaps.
 - **Script-first for manuscript videos.** When a manuscript/storyboard exists, cut decisions must be checked against the intended script and scene function, not just ASR phrase chunks. OBS operation segments often include unscripted but necessary explanation; keep the full operational explanation unless the user marks it as waste.
-- **Silence snapping (from AI剪口播 compute_keeps.js).** Don't cut at arbitrary word boundaries. Snap each cut edge to the nearest silence period within a 0.6s look-back window, then add 2-frame padding for breathing room. This produces cleaner cuts than fixed padding. Use `compute_keeps.js` `computeFinalKeeps()` when Volcengine transcription is available — it handles merge gap (0.15s), silence look-back (0.6s), pad (non-symmetric start/end), and internal silence secondary split (≥0.2s) automatically.
+- **Silence snapping (from AI剪口播 compute_keeps.js).** Don't cut at arbitrary word boundaries. Snap each cut edge to the nearest silence period within a 0.6s look-back window, then add 2-frame padding for breathing room. This produces cleaner cuts than fixed padding. Use `compute_keeps.js` `computeFinalKeeps()` — it handles merge gap (0.15s), silence look-back (0.6s), pad (non-symmetric start/end), and internal silence secondary split (≥0.2s) automatically.
 - **Energy reclaim (from AI剪口播 refine_boundaries.js).** ASR timestamps often over-extend — they include post-word silence/breath inside word end times. This compresses inter-word gaps below detection threshold, leaving breaths in the final cut. Run `refine_boundaries.js` to decode PCM, compute 10ms-frame RMS energy envelope, apply adaptive voice reference line (window-max − 12dB), and reclaim true word boundaries. Feed the refined silence periods to `compute_keeps.js`.
 - **Preserve peaks.** Laughs, punchlines, emphasis beats. Extend past punchlines to include reactions — the laugh IS the beat.
 - **Speaker handoffs** benefit from air between utterances. Common values: 400–600ms. Less for fast-paced, more for cinematic. Taste call.
