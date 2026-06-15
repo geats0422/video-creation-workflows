@@ -308,13 +308,33 @@ Invent a third style if neither fits. Hard rules: subtitles LAST (Rule 1), outpu
 
 Animations match the content and the brand. **Get the palette, font, and visual language from the conversation** — never assume a default. If the user hasn't told you, propose a palette in the strategy phase and wait for confirmation before building anything.
 
-**Tool options:**
+**Tool selection — pick the engine per animation slot:**
 
-Pick the engine per animation slot. Do not default to Remotion just because the animation is web-adjacent.
+Use the decision framework below. Do not default to any single tool — match the tool to the specific motion need.
 
-- **HyperFrames** — Browser-native HTML/CSS/GSAP video compositions: product UI motion, website-to-video or mockup-to-video captures, kinetic typography, landing-page/storyboard promos, data-driven UI states, transparent WebM overlays, and clips that need deterministic frame capture plus HyperFrames lint/validate/render checks. Best when the animation should be authored and verified like a web composition instead of a React component tree.
-- **Remotion** — React/CSS compositions with component state, reusable React primitives, or an existing Remotion brand system. Best when the user specifically asks for React/Remotion or when React composition is the simpler authoring model.
-- **Manim** — formal diagrams, state machines, equation derivations, graph morphs. Read `skills/manim-video/SKILL.md` and its references for depth.
+**HyperFrames** (HTML + CSS + GSAP, no build step):
+- Title cards, branded intros/outros, channel endcards
+- Kinetic typography, keyword reveals, caption sync (karaoke/逐字高亮)
+- Scene transitions (shader transitions, crossfades, wipes)
+- Floating overlays, annotations, lower thirds, labels on interface
+- Product UI motion, website-to-video, mockup-to-video
+- Code/config highlighting (`<pre>` + CSS markers)
+- Quick prototyping where browser preview is needed
+- 3D/WebGL effects (Three.js adapter)
+- Scaffold: `npx hyperframes init <dir> --example blank --non-interactive --skip-skills`
+- Output: `Rough\animations\slot_<id>\index.html` → `npx hyperframes render` → `render.mp4`
+
+**Remotion** (React + TypeScript, requires bundler):
+- Complex data visualizations (charts, dashboards, KPI displays) — Recharts/d3 integration
+- Architecture diagrams with parameterized nodes and connection lines
+- Multi-phase evolution animations (state machines, decision trees, flow morphs)
+- Reusable branded motion templates with TypeScript props
+- When the same template is reused across multiple videos with different data
+- Component composition where props/state management is cleaner than HTML
+- Existing brand system in React (huanyu-remotion-material skill)
+- Output: `Polished\Remotion\MotionXX_Name\remotion-project\` → `remotion render` → `out\render.mp4`
+
+**Manim** — formal diagrams, state machines, equation derivations, graph morphs. Read `skills/manim-video/SKILL.md` and its references for depth.
 - **PIL + PNG sequence + ffmpeg** — simple overlay cards: counters, typewriter text, single bar reveals, progressive draws. Fast to iterate, any aesthetic you want. The launch video used this.
 
 For HyperFrames slots, scaffold the slot inside `Rough\animations\slot_<id>\` with `npx --yes hyperframes init . --example blank --non-interactive --skip-skills`, build the HTML composition there, run the HyperFrames checks that fit the slot (`lint`, `validate`, and a draft render when practical), then produce the final overlay video with `npx --yes hyperframes render . -o render.mp4` or `--format webm -o render.webm` when alpha is required. Point the EDL overlay `file` at the actual rendered path.
