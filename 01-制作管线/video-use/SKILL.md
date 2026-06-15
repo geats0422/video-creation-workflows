@@ -81,8 +81,20 @@ First-time install lives in `install.md` (clone, deps, ffmpeg, skill registratio
 - `yt-dlp`, HyperFrames, Remotion, Manim installed only on first use.
 - First-use animation setup happens inside the slot directory, never at the video-use repo root. HyperFrames can be invoked with `npx --yes hyperframes ...`; Remotion can be scaffolded with `npx create-video@latest` or installed as a project-local dependency before using its `remotion render` command.
 - This skill vendors `skills/manim-video/`. Read its SKILL.md when building a Manim slot.
+- **AI剪口播 integration** (recommended for Chinese content): companion skill at `D:\work\Huanyu Code\template\ai-jian-koubo`. Provides Volcengine professional Chinese ASR (no GPU, 40h free), web-based waveform review UI, FCPXML export (剪映 + FCP), speech error auto-detection, and self-evolution. Configure `VOLCENGINE_API_KEY` in its `.env` before first use. Run `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\doctor.js"` to verify setup.
 
 Helpers (`helpers/transcribe.py`, `helpers/render.py`, etc.) live alongside this SKILL.md. Resolve their paths relative to the directory containing this file — the skill is typically symlinked at `~/.claude/skills/video-use/` or `~/.codex/skills/video-use/`.
+
+AI剪口播 scripts live at `D:\work\Huanyu Code\template\ai-jian-koubo\scripts\`. Reference them by absolute path when invoking. Key scripts:
+
+- `run_transcribe.sh` — Volcengine transcription (auto-rotates flash/standard engines)
+- `auto_filler.js` — rule-based filler word detection (no AI needed)
+- `gen_analysis.js` — sentence-level analysis for AI error detection
+- `generate_review.js` — web review UI generator (waveform + click-to-delete)
+- `serve_review.sh` — review server launcher (auto port, opens browser)
+- `lib/compute_keeps.js` — cut algorithm (silence snapping + internal silence split)
+- `lib/refine_boundaries.js` — energy reclaim (fixes ASR timestamp over-extension)
+- `lib/fcpxml.js` — FCPXML 1.8 generator (剪映 + Final Cut Pro)
 
 ## Helpers
 
@@ -93,6 +105,13 @@ Helpers (`helpers/transcribe.py`, `helpers/render.py`, etc.) live alongside this
 - **`render.py <edl.json> -o <out>`** — per-segment extract → concat → overlays (PTS-shifted) → subtitles LAST. `--preview` for 720p fast. `--build-subtitles` to generate `Sub\master.srt` inline.
 - **`grade.py <in> -o <out>`** — ffmpeg filter chain grade. Presets + `--filter '<raw>'` for custom.
 - **`generate_filmora_project.py <edl.json> -o <out>`** — Generate Wondershare Filmora project (.wfpx) from EDL. It auto-detects the nearest `ProjectFolder` beside the EDL, matching the project layout `D:\work\OPC\videos\{第X期：视频标题}\ProjectFolder`. Fallback template is `D:\work\OPC\video-use\123\ProjectFolder`. Use `--template-folder <ProjectFolder>` only to override auto-detection. `--name "Project Name"` optional.
+
+**AI剪口播 helpers** (Volcengine + review + FCPXML — prefer for Chinese content):
+
+- **Volcengine transcription**: `bash "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\run_transcribe.sh" "<video>" "<output_dir>"` — Professional Chinese ASR. No GPU needed. Outputs `subtitles_words.json` (word-level timestamps) + `volcengine_v3_result.json`. Use `--flash` for极速版 only, `--v3-standard` for标准版 only. Default `auto` rotates both.
+- **Filler detection**: `node "D:\work\Huanyu Code\template\ai-jian-koubo\scripts\auto_filler.js" <sentence_map> <words> <speech_errors>` — Detects 呃/嗯/额/诶, 句首过渡词, 句尾废词 automatically.
+- **Review UI**: `node "...generate_review.js" <words> <auto_selected> <audio> <out_dir>` + `bash "...serve_review.sh" <review_dir> <video> <server_script>` — Web-based waveform review. User clicks to delete, previews exact cut frames, exports FCPXML.
+- **FCPXML export**: The review UI's "导出 FCPXML" button generates `*_cut.fcpxml` using `lib/fcpxml.js`. For batch/EDL-driven FCPXML without the review UI, call `lib/fcpxml.js` directly from Node. Output is compatible with **剪映专业版** (文件 → 导入 → Final Cut Pro XML) and **Final Cut Pro** (double-click .fcpxml).
 
 For animations, create `Rough\animations\slot_<id>\` with `Bash` and spawn a sub-agent via the `Agent` tool.
 
@@ -140,13 +159,24 @@ For Filmora project output, place a known-good minimal Filmora `ProjectFolder` i
 
 ## The process
 
-1. **Inventory.** `ffprobe` every source. `transcribe_batch.py` on the directory. `pack_transcripts.py` to produce `takes_packed.md`. Sample one or two `timeline_view`s for a visual first impression.
-2. **Pre-scan for problems.** One pass over `takes_packed.md` to note verbal slips, obvious mis-speaks, or phrasings to avoid. Plain list, feed into the editor brief.
-3. **Converse.** Describe what you see in plain English. Ask questions *shaped by the material*. Collect: content type, target length/aspect, aesthetic/brand direction, pacing feel, must-preserve moments, must-cut moments, animation and grade preferences, subtitle needs, **output preference (direct render or Filmora project)**. Do not use a fixed checklist — the right questions are different every time.
-4. **Propose strategy.** 4–8 sentences: shape, take choices, cut direction, animation plan, grade direction, subtitle style, length estimate. **Wait for confirmation.**
+1. **Inventory.** `ffprobe` every source. Transcribe all sources.
+   - **Chinese content (default)**: Use AI剪口播 Volcengine pipeline for accurate word-level ASR without GPU. Run `run_transcribe.sh` per source, then `gen_analysis.js` to produce sentence-level analysis. Copy resulting `subtitles_words.json` to `Rough\transcripts\` for caching.
+   - **Fallback (no Volcengine key, or non-Chinese)**: `transcribe_batch.py` on the directory with Whisper. `--whisper-model medium` recommended for 6GB GPUs. `pack_transcripts.py` to produce `takes_packed.md`.
+   - Sample one or two `timeline_view`s for a visual first impression.
+2. **Pre-scan for problems.** Two-tier error detection:
+   - **Tier 1 (script)**: Run `auto_filler.js` to auto-detect filler words (呃/嗯/额/诶, 句首过渡词, 句尾废词). No AI needed — safe, fast, deterministic.
+   - **Tier 2 (AI)**: Read `analysis.txt` + 用户习惯/规则.md. Identify: A1 重复重说, A2 残句/卡顿, B3 冗余引导短语, B4 句中重说 (delete前半段). Conservative principle: **漏删优于过删**.
+   - Also note verbal slips, obvious mis-speaks, or phrasings to avoid. Feed into the editor brief.
+   - **Retake markers**: If the speaker says "重录", "不要", "pass", "cut", "again", or "最终版", treat as discard/keep signal per the recording markers rules below.
+3. **Converse + Review.** Describe what you see. Ask questions shaped by the material. Collect: content type, target length/aspect, output preference (**direct render, Filmora project, FCPXML for 剪映/FCP**, or web review first then export).
+   - **Web review mode (recommended for Chinese talking-head)**: Generate review UI via `generate_review.js` + `serve_review.sh`. User gets a local webpage with three-color waveform (gray=silence, red=delete, yellow=algorithm extra), click-to-delete transcript, audio playback, and real-time cut frame preview. User clicks "导出 FCPXML" when satisfied.
+   - **Console mode (fallback)**: Propose strategy in 4-8 sentences. Wait for confirmation.
+4. **Propose strategy** (console mode only — web review mode skips this). 4–8 sentences: shape, take choices, cut direction, animation plan, grade direction, subtitle style, length estimate. **Wait for confirmation.**
 5. **Execute.** Produce `edl.json` via the editor sub-agent brief. Drill into `timeline_view` at ambiguous moments. Build animations in parallel sub-agents. Apply grade per-segment.
    - **Option A (Direct render):** Compose via `render.py`.
    - **Option B (Filmora project):** Generate `.wfpx` via `generate_filmora_project.py`.
+   - **Option C (FCPXML — 剪映/FCP):** Generate `*_cut.fcpxml` via `lib/fcpxml.js` (from review UI export or direct call). Import to 剪映 (文件 → 导入 → Final Cut Pro XML) or FCP (double-click).
+   - **Option D (Multiple):** Generate both `.wfpx` + `.fcpxml` + `preview.mp4` if the user wants flexibility.
 6. **Preview.** `render.py --preview` (for direct render) or verify `.wfpx` file exists (for Filmora project).
 7. **Self-eval (before showing the user).** For direct render: Run `timeline_view` on the **rendered output** (not the sources) at every cut boundary (±1.5s window). Check each image for:
    - Visual discontinuity / flash / jump at the cut
@@ -163,6 +193,8 @@ For Filmora project output, place a known-good minimal Filmora `ProjectFolder` i
 
 - **Audio-first.** Candidate cuts from word boundaries and silence gaps.
 - **Script-first for manuscript videos.** When a manuscript/storyboard exists, cut decisions must be checked against the intended script and scene function, not just ASR phrase chunks. OBS operation segments often include unscripted but necessary explanation; keep the full operational explanation unless the user marks it as waste.
+- **Silence snapping (from AI剪口播 compute_keeps.js).** Don't cut at arbitrary word boundaries. Snap each cut edge to the nearest silence period within a 0.6s look-back window, then add 2-frame padding for breathing room. This produces cleaner cuts than fixed padding. Use `compute_keeps.js` `computeFinalKeeps()` when Volcengine transcription is available — it handles merge gap (0.15s), silence look-back (0.6s), pad (non-symmetric start/end), and internal silence secondary split (≥0.2s) automatically.
+- **Energy reclaim (from AI剪口播 refine_boundaries.js).** ASR timestamps often over-extend — they include post-word silence/breath inside word end times. This compresses inter-word gaps below detection threshold, leaving breaths in the final cut. Run `refine_boundaries.js` to decode PCM, compute 10ms-frame RMS energy envelope, apply adaptive voice reference line (window-max − 12dB), and reclaim true word boundaries. Feed the refined silence periods to `compute_keeps.js`.
 - **Preserve peaks.** Laughs, punchlines, emphasis beats. Extend past punchlines to include reactions — the laugh IS the beat.
 - **Speaker handoffs** benefit from air between utterances. Common values: 400–600ms. Less for fast-paced, more for cinematic. Taste call.
 - **Audio events as signals.** `(laughs)`, `(sighs)`, `(applause)` mark beats. Extend past them.
@@ -367,6 +399,23 @@ Match the source unless the user asked for something specific. Common targets: `
 ```
 
 `grade` is a preset name or raw ffmpeg filter. `overlays` are rendered animation clips. `subtitles` is optional and applied LAST.
+
+**FCPXML output** (alternative to EDL for 剪映/FCP): When using the AI剪口播 review UI, the export produces `*_cut.fcpxml` directly — no EDL needed. For EDL-to-FCPXML conversion, use `lib/fcpxml.js` `buildFcpxml({ videoFile, deleteList, silencePeriods, cutOpts })`. The FCPXML uses frame-accurate ticks (frame × fpsDen), references a single source asset, and imports to 剪映 (文件 → 导入 → Final Cut Pro XML) or FCP (double-click).
+
+## Self-evolution (from AI剪口播)
+
+When the user exports from the review UI, a `review_log.json` is written alongside the FCPXML. It records: AI initial selections, user final selections, cut parameters, and word-level diff between the two.
+
+**Learning trigger** (user-explicit, never automatic): User says "已导出，学一下" or similar.
+
+1. Read `review_log.json` from the project's review directory.
+2. Read existing rules: `用户习惯/规则.md` (base) + `用户习惯/经验规则.md` (learned).
+3. For each `diff.aiOnly` (AI deleted, user kept — possible over-cut) and `diff.userOnly` (user deleted, AI missed — possible under-cut), abstract generalizable preferences.
+4. Check if any diff violates existing rules — flag for user judgment.
+5. Present candidates: new rules, refinements, merges. **Wait for user confirmation.**
+6. Write confirmed rules to `经验规则.md` with source tag `(学于 <video> YYYY-MM-DD；已确认)`.
+
+Never auto-write rules. Never固化 single-context exceptions into general rules.
 
 ## Memory — `project.md`
 
