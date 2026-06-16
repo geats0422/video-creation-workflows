@@ -101,7 +101,22 @@ video-creation-workflows/
 
 ## 使用方式
 
-这些 skill 设计用于 [opencode](https://opencode.ai) 框架。将对应 skill 目录配置到 opencode 的 skill 路径中即可调用。
+这些 skill 的本质是「带 `SKILL.md` 的目录」——任何支持读取 skill 目录、能跑 shell 的 coding agent 都能用，**不绑定特定框架**。
+
+### 支持的 Agent
+
+| Agent | Skill 目录 | 说明 |
+|---|---|---|
+| **opencode** | `.opencode/skill/`（项目级）或 `~/.config/opencode/skills/`（用户级） | 作者本人主力环境 |
+| **Claude Code** | `.claude/skills/` 或 `~/.claude/skills/` | |
+| **Codex** | `~/.codex/skills/` | |
+| **Cursor / VS Code** | 项目根 `skills/`（加入 include 列表） | |
+| **Trae** | `.trae/skills/` | |
+| **Antigravity / Gemini** | `.agent/skills/` | |
+
+把对应 skill 目录（如 `01-制作管线/video-use/`）复制或软链到你所用 agent 的 skill 路径下即可调用；各 agent 的具体注册方式略有差异，参考其官方文档。
+
+> 注：本仓库的项目路径约定（`D:\work\OPC\videos\...`）是作者在 opencode 下的实际配置，迁移到其他 agent 时按需调整 `videos_dir`。
 
 ## 项目路径约定
 
