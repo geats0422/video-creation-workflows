@@ -1,6 +1,8 @@
 # Video Creation Workflows
 
-视频创作两套完整工作流的 skill 集合，基于 opencode 技能框架构建。
+视频创作两套完整工作流的 skill 集合，基于 [opencode](https://opencode.ai) 技能框架构建。
+
+> **关于本项目**：这不是一个从零原创的项目。作者参考并整合了多个优秀开源项目的实现思路与能力，按自己的视频创作流程把它们拼接成一套连贯的工作流。各 skill 的原始来源见文末[致谢](#致谢)。
 
 ## 目录结构
 
@@ -19,17 +21,24 @@ video-creation-workflows/
 ```
 逐字稿 ──→ manuscript-material-planner ──→ 分镜 + 素材清单 + 飞书JSON
                                            │
-        ┌──────────────────────────────────┤
-        ↓                                  ↓
-  video-use                         media-asset-acquirer
-  (拍摄/粗剪/调色/字幕)              (外部素材采购/许可证管理)
-        │                                  │
-        ↓                                  ↓
-  huanyu-remotion-material ←── remotion-best-practices
-  (Remotion 精确动效)            (Remotion 技术规范)
-        │
-        ↓
-  n8n ──→ 飞书多维表格同步
+                 ┌─────────────────────────┤
+                 ↓                           ↓
+          ai-jian-koubo                media-asset-acquirer
+       (口播转录/口误识别)            (外部素材采购/许可证)
+                 │                           │
+                 ↓                           │
+            video-use                        │
+       (粗剪/调色/字幕)                       │
+                 │                           │
+                 ↓                           │
+   huanyu-remotion-material ← remotion-best-practices
+   (Remotion 精确动效)        (Remotion 技术规范)
+                 │
+                 ↓
+   jianying-toolkit / Filmora ──→ 成片
+                 │
+                 ↓
+          n8n ──→ 飞书多维表格同步
 ```
 
 ### 各 skill 职责
@@ -37,10 +46,12 @@ video-creation-workflows/
 | Skill | 职责 |
 |---|---|
 | **manuscript-material-planner** | 解析逐字稿，生成 `storyboard.json`（核心数据源）、`material_suggestion_doc.md`、`remotion_candidate_list.md`、`music_cue_sheet.json`、`asset_request_list.md`、`feishu_storyboard_records.json` |
+| **ai-jian-koubo** | 口播视频转录（火山引擎）+ AI 口误/口癖识别 + 本地网页审核，导出 FCPXML 给剪辑软件完成最后一刀 |
 | **video-use** | 视频转录、多 take 选择、粗剪、调色、字幕、Filmora 项目生成 |
 | **huanyu-remotion-material** | 粗剪后按 `motion_request_list.md` 制作 Remotion 动效（流程图/架构图/数据可视化等） |
-| **media-asset-acquirer** | 下载免版税音乐/SFX/Stock 视频，ffmpeg 标准化转码，记录许可证 |
 | **remotion-best-practices** | Remotion 技术规范与最佳实践 |
+| **media-asset-acquirer** | 下载免版税音乐/SFX/Stock 视频，ffmpeg 标准化转码，记录许可证 |
+| **jianying-toolkit** | 通过 CLI 直接生成剪映（JianYing/CapCut）原生 draft：`/create_draft`、`/add_video`、`/add_subtitle`、`/add_audio`、`/add_effect`、`/save_draft` |
 
 ### 数据流核心文件
 
@@ -98,10 +109,44 @@ video-creation-workflows/
 
 ```
 D:\work\OPC\videos\{第X期：视频标题}\
-├── Raw Footage\          原始拍摄素材（只读）
-├── video scripts\        逐字稿 + 分镜规划文件
-├── assets\               外部素材 + 许可证
-├── edit\                 剪辑工作区
-├── picture\              封面/截图
-└── ProjectFolder\        Filmora 项目
+├── Raw\                原始拍摄素材（只读，禁止改名/覆盖）
+├── Rough\              粗剪工作区（转录缓存、EDL、调色片段、preview.mp4…）
+├── Polished\           精剪（含 Remotion 动效素材）
+├── Final\              成片（确认发布的最终渲染 video_final.mp4）
+├── Sub\                字幕（master.srt）
+├── Thumb\              封面/截图
+├── Backup\             归档备份
+├── video scripts\      逐字稿 + 分镜规划文件
+├── assets\             外部素材 + 许可证
+└── ProjectFolder\      Filmora / 剪映 项目文件
 ```
+
+---
+
+## 致谢
+
+本项目站在以下项目的肩膀上。每个 skill 的核心能力都可追溯到它们的原始实现：
+
+| 对应本项目 | 致敬项目 | 贡献 |
+|---|---|---|
+| **video-use** | [browser-use/video-use](https://github.com/browser-use/video-use) | 「转录 → 粗剪 → 调色 → 烧字幕 → 自评」整个范式的来源 |
+| **video-use**（粗剪思路） | [DayadaUP/claude-code-auto-video-edit](https://github.com/DayadaUP/claude-code-auto-video-edit) | Whisper 转写 + 口头标记识别好坏 take + 字幕对齐时间线 |
+| **ai-jian-koubo** | [lcbuaaliu/ai-jian-koubo](https://github.com/lcbuaaliu/ai-jian-koubo) | 火山引擎转录 + AI 口误识别 + 网页审核 + FCPXML 导出 |
+| **jianying-toolkit** | [luoluoluo22/jianying-editor-skill](https://github.com/luoluoluo22/jianying-editor-skill) | 剪映草稿自动化的整体范式 |
+| **jianying-toolkit**（API 设计） | [fancyboi999/capcut-mcp](https://github.com/fancyboi999/capcut-mcp) | `add_video / add_audio / add_subtitle / add_effect / save_draft` 等命令设计 |
+| **02-内容校准/cheat-on-content** | [XBuilderLAB/cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) | 评分 → 盲预测 → 复盘 → rubric 进化的整个内容校准闭环 |
+
+感谢以下项目的开发者：
+
+- **luoluoluo22**（B站：我老罗卜）— https://github.com/luoluoluo22/jianying-editor-skill
+- **fancyboi999** — https://github.com/fancyboi999/capcut-mcp
+- **lcbuaaliu**（B站：栗氪聊AI）— https://github.com/lcbuaaliu/ai-jian-koubo
+- **browser-use** — https://github.com/browser-use/video-use
+- **DayadaUP**（抖音：大牙大）— https://github.com/DayadaUP/claude-code-auto-video-edit
+- **XBuilderLAB**（抖音：他们都叫我蜗牛学长）— https://github.com/XBuilderLAB/cheat-on-content
+
+---
+
+## License
+
+[MIT](./LICENSE) — 随便用、改、分发。所有致敬项目同样采用 MIT 许可证。
