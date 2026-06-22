@@ -66,9 +66,9 @@ Build in Public 内容策略与标题评审专家。不是选"最吸睛的标题
 确认用这个标题？(yes / 换一个 / 我自己改)
 ```
 
-用户 yes → 建议更新 draft 标题行 + 跑 /cheat-predict。
+用户 yes → **自动更新 draft 文件标题**：读取 `<draft-path>`，将第一行 `# XXX`（标题行）替换为最优标题，保存。然后提示跑 /cheat-predict。
 用户"换一个" → 从剩余候选中选另一个或建议修改方向。
-用户自己改 → 结束。
+用户自己改 → 询问用户自定义标题 → 同样更新 draft 文件。
 
 ## Integration
 
