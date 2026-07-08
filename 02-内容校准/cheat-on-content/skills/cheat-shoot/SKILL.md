@@ -1,14 +1,14 @@
 ---
 name: cheat-shoot
-description: 登记一条视频已拍摄。**建 video folder + 询问实际拍摄稿是否与 scripts/<id>.md 一致 + buffer +1**。与 cheat-publish 配对：拍了进队列，发了出队列。触发词："拍了"/"拍了 X"/"shot"/"shot it"/"已拍 X"/"录完了"。
+description: 登记一条视频已拍摄。**确认 video folder 已初始化（cheat-seed Phase 3 已建，缺失则补建）+ 询问实际拍摄稿是否与 scripts/<id>.md 一致 + buffer +1**。与 cheat-publish 配对：拍了进队列，发了出队列。触发词："拍了"/"拍了 X"/"shot"/"shot it"/"已拍 X"/"录完了"。
 argument-hint: <scripts-path-or-id>
 allowed-tools: Bash(*), Read, Write, Edit, Glob
 ---
 
-# /cheat-shoot — 登记拍摄完成 + 建 video folder + (改稿则) 触发 v2 预测
+# /cheat-shoot — 登记拍摄完成 + (改稿则) 触发 v2 预测
 
 把视频从"已写预测、未拍摄"状态推进到"已拍摄、未发布"状态。这一步：
-1. **建 `videos/<同 id>/`** 目录（之前没有的话）
+1. **确认 `videos/<id>_<short>/` 已初始化**（cheat-seed Phase 3 已建；如缺失则按 [video-folder-schema.md](../../shared-references/video-folder-schema.md) 补建）
 2. **询问用户**："实际拍摄时用的稿子和 `scripts/<id>.md` 一致吗？"
 3. 算 diff——超过 V2_TRIGGER_THRESHOLD (默认 30%) → **delegate 到 `/cheat-predict — mode: v2`** 在原 prediction 文件 append `## 预测 v2` 段
 4. 把 video folder 加进 state.shoots 队列，buffer +1
@@ -72,9 +72,11 @@ cheat-shoot 自己**不**写预测内容——所有预测落盘逻辑在 cheat-
 - 已存在 → 警告"已登记过（X 天前）。是要重新登记，还是要用 /cheat-publish 发布？"
 - 不存在 → 进入 Phase 2
 
-### Phase 2：建 video folder + 询问稿子一致性
+### Phase 2：确认 video folder 已初始化 + 询问稿子一致性
 
-1. 建目录 `videos/<id>_<short>/`（同 scripts/ + predictions/ 的命名）
+1. 检查 `videos/<id>_<short>/` 是否存在（cheat-seed Phase 3 应已建）：
+   - 存在 → 直接进步骤 2
+   - 缺失 → 按 [video-folder-schema.md](../../shared-references/video-folder-schema.md) 补建全部子目录，标记 `ad_hoc_init: true`
 2. **询问用户**：
 
 ```

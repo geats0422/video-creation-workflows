@@ -22,9 +22,9 @@ allowed-tools: Bash(*), Read, Edit, Write, Glob, Grep, Skill
   ↓
 [Phase 3: 验证/推翻预测的各假设]
   ↓
-[Phase 4: 提炼新观察]
+[Phase 4: 提炼新观察（4a rubric / 4b pattern / 4c 双角度档案验证）]
   ↓
-[Phase 5: 落盘（追加到 ## 复盘 段）]
+[Phase 5: 落盘（追加到 ## 复盘 段 + brief/audit 验证段）]
   ↓
 [Phase 6: 写入 rubric_notes.md 的"观察记录"段]
   ↓
@@ -207,9 +207,77 @@ Diff `scripts/<id>.md`（pre-shoot 草稿，可能是 cheat-seed 写或用户写
 如果 `script_consistency = "consistent"`（用户拍时没改稿）→ 4b 仍然有意义（diff 也许是空），但可以快速跳过细查。
 如果 `script_consistency = "modified"`（用户拍时改了）→ **4b 是核心**，重点学这次改动 → 流量影响。
 
-### Phase 5: 落盘到 ## 复盘 段
+#### 4c. 检验 who-for / open-source 档案（双角度闭环）
 
-用 Edit 工具，**仅追加**到现有 `## 复盘` 段（如有占位 `（待填）` 行先删除）：
+**前置**：检查 `<user-content-project>/audience-brief.md` 和 `open-source-audit.md` 是否存在。**都不存在 → 跳过 4c**（这条视频没跑过双角度审查，只走 rubric 闭环）。任一存在 → 执行对应检验。
+
+**路径推导**：audience-brief.md 和 open-source-audit.md 位于 video folder 根（`videos/<视频标题>/audience-brief.md`）。通过当前 prediction 文件路径推导 video folder 根：prediction 在 `<video-folder>/predictions/<id>.md` → 上溯一层即 video folder 根。
+
+4c 复用 Phase 1 的实绩数据 + Phase 2 的 top 评论分析，**不重新抓数据**。如果用户 manual 复盘只有基础数据（播放/点赞/评论），没有观众画像/搜索流量占比/完播率 → 降级检验（只验能验的，标注 `完整画像 N/A`，跟 Phase 1 manual 路径一致）。
+
+##### 4c-1: 检验 audience-brief.md（如存在）
+
+读 brief 的关键判断，对照实绩：
+
+| brief 判断 | 检验方式 | 数据来源 |
+|---|---|---|
+| Q1 受众画像 | 平台后台观众画像（年龄/职业/兴趣）vs brief 的 Q1 | 用户补充或平台后台 |
+| 搜索意图段 | 搜索流量占比 vs brief 预测的主搜索词/长尾问句 | 平台后台流量来源 |
+| Q6 钩子有效性 | 开头完播率 vs brief 的钩子判断 | 平台后台完播曲线 |
+| Red Flag | 命中的红旗是否真的拖累了流量 | 实绩 vs 同 composite 基准 |
+
+**判定**：
+- 受众画像匹配 Q1 + 搜索流量 >30% → who-for 诊断**有效**
+- 受众对但搜索流量 <10% → 受众判断对，**搜索意图段判断错**（记录"搜索意图误判 pattern"）
+- 受众画像不匹配 Q1 → **Q1 判断错**（记录"受众误判 pattern"）
+- red_flag 命中的维度确实是拖后腿的最低分维度 → 红旗诊断有效
+
+##### 4c-2: 检验 open-source-audit.md（如存在）
+
+读 audit 的关键判断，对照实绩 + top 评论：
+
+| audit 判断 | 检验方式 | 数据来源 |
+|---|---|---|
+| 推理完整度 | top 评论引用的是"推理过程"还是只引用"结论" | Phase 2 评论聚类 |
+| 差异化印记 | top 评论是否出现"只有你才会这么想"/"说出了我想说的"类表达 | top 评论关键词 |
+| 营销属性 | 评论区是"真诚"正面信号还是"被推销感"负面信号 | top 评论情感倾向 |
+| 总体开源度 | 搜索流量占比（开源是长尾型）+ T+30d 增长曲线 | 流量来源 + 时间序列 |
+
+**判定**：
+- 评论引用推理 + 搜索流量长尾增长 → open-source 诊断**有效**，自我开源确实建立差异化
+- 评论只引用结论 + 推荐流主导 → 内容仍是"结论型"，audit 红旗可能没改到位
+- 评论区"被推销感" → 营销属性仍高，Q6 诊断对但改稿没改到位
+
+##### 4c-3: 输出
+
+**(a) 追加到 brief/audit 末尾的 Retro 验证段**（格式见两模板）——记录每个判断的 ✅/❌ + 实绩数据点。**诊断段 immutable**（跟预测段一样），只追加验证段。
+
+**(b) 写进 rubric_notes.md 候选观察**（仅当发现 rubric 盲区）：
+
+```
+### 候选观察（双角度验证 · [视频简称] T+Nd）
+- who-for：受众猜[对/错]，搜索流量[X%]（[匹配/不匹配]搜索意图段判断）
+  → [如果 AB 分未变但搜索流量高] → "AB 测广度不测搜索可达性"盲区又添 1 样本支持
+- open-source：评论[引用推理/只引用结论]，营销属性[低/高]
+  → [如果 QL 高但评论不引用推理] → "QL 测金句密度不测推理密度"候选盲区
+```
+
+这些候选观察是未来 `/cheat-bump` 的证据——攒到 ≥3 篇同类验证触发 bump。
+
+##### 4c Key Rules
+
+1. brief/audit 都不存在 → 跳过 4c，不影响 retro 主流程
+2. 复用 Phase 1/2 数据，不重新抓
+3. manual 复盘缺画像/流量来源 → 降级检验，标 `完整画像 N/A`
+4. 发现盲区 → 候选观察（不是直接 bump，bump 走 Phase 7 → /cheat-bump）
+5. brief/audit 诊断段 immutable，只追加验证段
+
+### Phase 5: 落盘到 ## 复盘 段 + brief/audit 验证段
+
+用 Edit 工具做**三处追加**：
+1. **prediction 文件**：追加到现有 `## 复盘` 段（如有占位 `（待填）` 行先删除）
+2. **audience-brief.md**（如存在）：末尾追加 4c-1 的 Retro 验证段
+3. **open-source-audit.md**（如存在）：末尾追加 4c-2 的 Retro 验证段
 
 ```markdown
 ## 复盘

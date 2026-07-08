@@ -152,6 +152,33 @@ Batch Mode — 用户显式要批量（`/cheat-seed --batch 5`）：
 粗打分（v0 等权 7 维）：ER=X HP=X QL=X NA=X AB=X SR=X SAT=X → composite ≈ X.X
 Confidence: 🔴 极低 (你才校准 0/N 篇)
 
+### 李摩拉三标准选题检验（收敛前强制过三关）
+
+> 选题从第一秒就决定了素材质量。少一条标准，内容做到死也拿不到及格分。
+
+**收敛角度后，写 draft 前，强制过三关**：
+
+**① 别自嗨（外行检验）**
+- 这个选题发给不懂行的家人/朋友，他们想看吗？
+- 你在自己领域觉得有意思的，观众可能没积累，get 不到
+- **窄到只有同行在乎的题，天花板就是同行数量**——借古论今是跨圈层桥梁，但要确认古人案例真的让外行也想看
+
+**② 别人听完记得住吗（酒局分享测试）**
+- 想象在酒局上喝差不多了，你愿意拿出这个选题分享吗？
+- 不是"广不广"，是"**听完能不能复述给朋友**"——分享率比完播率更重要
+- 能复述的关键是"**有没有一个让人记住的点**"（金句/反差/极端案例）
+
+**③ 谜题（素材层面的极端到极端缺口）**
+- 这个素材有没有"**从一个极端到另一个极端**"的变化？
+  - 复仇故事（被伤害→复仇成功）
+  - 四大名著（孙悟空被罚→成佛 / 刘备卖草鞋→统一天下）
+  - EP004 实例（Agent 从"教科书"→"专家"——从无能到专业的极端变化）
+- **用一句话写出这个缺口**——写得出 = 素材有谜题，可以做；写不出 = 素材太平，结构再好也救不了
+- ⚠️ 这是**素材层面**的检验，不是 Pattern 14（结构层面）——素材没谜题，结构搭不出来
+
+**三关全过** → 写 draft
+**任何一关不过** → 建议换角度（回 Phase 2A 深挖）
+
 要不要让我先写一份 draft？(yes / 换角度 / 我自己写)
 ```
 
@@ -210,13 +237,21 @@ c) 你长期琢磨的某个 unsolved 困惑？（"我一直没想明白为啥 X.
 
 详见 commit history（旧 cheat-seed 的 Phase 1-3）。这是 escape hatch，不是默认。
 
-### Phase 3: 计算 candidate ID + 落候选池
+### Phase 3: 计算 candidate ID + 落候选池 + 初始化视频目录
 
 不管 Mode A/B/C 哪条路径，确认角度后：
 
 1. 算 candidate id：`sha256("seed-" + 立意 + 触发时间)[:12]`
 2. 写一行 entry 到 `candidates.md`（按 [candidate-schema.md](../../shared-references/candidate-schema.md) 格式）
 3. 标 `tier=tier1` + `read_status=deep_read`（已经讨论过，不是 skim）
+4. **初始化视频目录**（必做，避免后续产物散落）：
+   - 路径：`videos/<工作标题>/`（用工作标题作文件夹名，最终发布后可改名追溯）
+   - 按 [video-folder-schema.md](../../shared-references/video-folder-schema.md) 标准结构一次性创建全部子目录
+   - 后续所有产物（draft / prediction / brief / cover prompt / 发布文案 / 封面图 / 字幕 / 成片等）按 schema 落到对应子目录，禁止散落到工作目录根
+5. **建剪映草稿 symlink**（必做，让剪映识别项目目录的 Jianying-draft/）：
+   - 在剪映草稿根目录下建 symlink 指向 `videos/<工作标题>/Jianying-draft/`
+   - 详见 [video-folder-schema.md](../../shared-references/video-folder-schema.md) 的"Jianying-draft/ 的 symlink 机制"段
+   - 前提：Windows 开发者模式已开（检查 `AllowDevelopmentWithoutDevLicense=1`）
 
 ### Phase 4: 写 draft
 
@@ -227,6 +262,8 @@ c) 你长期琢磨的某个 unsolved 困惑？（"我一直没想明白为啥 X.
 **字数**：按 `DRAFT_LENGTH` 派生（基于 `typical_duration_seconds`）。
 
 **段落版**：每段 100-300 字，**不要写一行一行的字幕格式**——那是剪映拍后自动断的。
+
+**身份标签（必含）**：每期 draft 开头必须植入固定身份标签（Pattern B1），建立品牌锚点。默认用主标签 A："我是焕羽，一个用古人智慧驾驭 AI 的独立开发者"；产品向内容用变体 C："我是焕羽，一个从0到1的独立开发者，Build in Public 的 OPC 实践者"。详见 [script_patterns.md](../../videos/<第一期文件夹>/script_patterns.md) 的 Pattern B1 段。**不允许省略**——EP002-004 因未强制而缺失，是校准教训。
 
 格式：
 
@@ -266,6 +303,8 @@ c) 你长期琢磨的某个 unsolved 困惑？（"我一直没想明白为啥 X.
 接下来你可以：
 - 改写这份 draft（直接在原文件改）
 - 改完跑 "打分这篇 scripts/<...>.md" 看 7 维评分
+- 想清楚这是拍给谁的 → "这是拍给谁的 scripts/<...>.md"（跑 /cheat-who-for，搜索型内容强烈建议）
+- 想清楚推理过程呈现了没 → "自我开源 scripts/<...>.md"（跑 /cheat-open-source，长期 IP 内容强烈建议）
 - 决定要拍 → "启动预测 scripts/<...>.md"
 
 下一篇你想做什么？

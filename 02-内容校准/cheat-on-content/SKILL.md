@@ -35,6 +35,16 @@ allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, Skill, mcp__llm-chat__cha
 
 ---
 
+## 视频目录结构（全局约定）
+
+每期视频的所有产物（draft / prediction / brief / cover prompt / 发布文案 / 封面图 / 字幕 / 成片等）统一放在 `videos/<视频标题>/` 下，按标准子目录组织。
+
+- **初始化时机**：`/cheat-seed` Phase 3（写 draft 前一次性建全部子目录）
+- **所有 skill 共享**：cheat-publish / cheat-shoot / cheat-retro / cheat-cover 等都按此结构定位产物
+- 完整 schema：[shared-references/video-folder-schema.md](shared-references/video-folder-schema.md)
+
+---
+
 ## 路由表（触发词 → 子 skill）
 
 | 用户说 | 调用 | 前置条件 |
@@ -43,6 +53,8 @@ allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, Skill, mcp__llm-chat__cha
 | "找对标" / "学这个账号" / "拆这几个对标视频" / "learn from" / "导入对标账号" | `/cheat-learn-from` | 已 init；cold-start 强烈建议；后续可随时 --append / --replace |
 | "找选题" / "我不知道拍什么" / "seed" / "找前 5 个选题" | `/cheat-seed` | 已 init（cold-start 用户专用一次性种子动作） |
 | "打分这篇 [path]" / "score this [path]" | `/cheat-score` | rubric_notes.md 存在 |
+| "这是拍给谁的" / "受众是谁" / "who-for" / "这条解决什么问题" | `/cheat-who-for` | 已 init + 有 draft（账号 IP 通用，非营销类每条建议跑） |
+| "自我开源" / "这条够真诚吗" / "我是不是端着了" / "open-source" | `/cheat-open-source` | 已 init + 有 draft（产品获客专用，营销/获客类才跑） |
 | "启动预测" / "start prediction" / "给这稿子打分并预测" | `/cheat-predict` | 已 init + 有最终稿 |
 | "拍了 X" / "shot it" / "录完了" | `/cheat-shoot` | 对应预测已写（buffer +1） |
 | "已发布" / "I shipped it" / "发布链接是 X" | `/cheat-publish` | 对应预测文件存在（buffer -1） |
@@ -147,6 +159,8 @@ cheat-on-content/
 │   ├── cheat-learn-from/SKILL.md      # ✅ 对标账号导入（拆 pattern + 派生 base rubric 信号）
 │   ├── cheat-seed/SKILL.md            # ✅ Cold-start 选题启动器（brainstorm + 可选 draft）
 │   ├── cheat-score/SKILL.md           # ✅ 单稿打分（不写文件）
+│   ├── cheat-who-for/SKILL.md         # ✅ 受众价值采访（post-draft，pre-predict，产出 audience-brief.md）
+│   ├── cheat-open-source/SKILL.md     # ✅ 自我开源度采访（post-draft，pre-predict，产出 open-source-audit.md）
 │   ├── cheat-predict/SKILL.md         # ✅ 盲预测 + immutable 日志
 │   ├── cheat-shoot/SKILL.md           # ✅ 登记拍摄（buffer +1）
 │   ├── cheat-publish/SKILL.md         # ✅ 发布元数据登记（buffer -1）
@@ -167,6 +181,7 @@ cheat-on-content/
 │   ├── candidate-schema.md            # ✅ 候选项统一 schema
 │   ├── cadence-protocol.md            # ✅ 节奏协议（buffer 警戒 + 选题策略）
 │   ├── state-management.md            # ✅ .cheat-state.json 读写约定
+│   ├── revision-loop-protocol.md      # ✅ 改稿闭环（who-for/open-source Phase 5 共用）
 │   └── migration-protocol.md          # ✅ schema 演进哲学 + maintainer checklist
 ├── starter-rubrics/                   # 各内容形态的先验 rubric
 │   ├── opinion-video.md               # ✅ 观点视频（中文，已校准 25+ 样本）
@@ -175,6 +190,8 @@ cheat-on-content/
 │   └── short-form-text.md             # ⬜ X thread / 微博长文
 ├── templates/                         # skill 写进用户 repo 的文件骨架
 │   ├── rubric_notes.template.md       # ✅
+│   ├── audience-brief.template.md     # ✅ 受众价值档案（cheat-who-for 产出）
+│   ├── open-source-audit.template.md  # ✅ 自我开源度审查档案（cheat-open-source 产出）
 │   ├── prediction.template.md         # ✅ 统一版（所有阶段，含 confidence header）
 │   ├── retro.template.md              # ✅
 │   ├── candidates.template.md         # ✅

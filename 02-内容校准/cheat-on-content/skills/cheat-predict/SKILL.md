@@ -66,6 +66,8 @@ Confidence 派生表见 [shared-references/state-management.md](../../shared-ref
 | `rubric_notes.md` | 用户项目根 |
 | `.cheat-state.json` | 状态文件 |
 | `predictions/*.md`（可选） | 历史预测，作为锚点 |
+| `audience-brief.md`（可选） | `/cheat-who-for` 产出。存在时读它辅助 AB/SR 判断——受众画像、痛点、搜索意图段作为 context，不替代打分。header `Red Flag: true` 时 confidence 降一档 |
+| `open-source-audit.md`（可选） | `/cheat-open-source` 产出。存在时读它辅助 SAT（自嘲深度，真诚复盘带自嘲）/ QL（真实推理出金句）判断，不替代打分。header `Red Flag: true` 时 confidence 降一档 |
 
 ### 入参解析（Phase 0.5，在 blind check 之前）
 

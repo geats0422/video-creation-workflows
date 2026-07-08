@@ -132,10 +132,16 @@ python scripts/jianying.py add_sticker \
 ```bash
 python scripts/jianying.py save_draft \
   --draft-id <id> --cache-dir <dir> \
-  --output "C:/Users/<user>/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft"
+  --output "<剪映系统设置里的草稿根路径>"
 ```
 
+> ⚠️ **`--output` 必须用剪映 GUI 设置里的实际草稿根路径，不要用下面的"默认 Windows 路径"占位符**。很多用户（包括本 skill 维护者）会把剪映草稿位置从默认 C 盘改到 D 盘以节省系统盘空间。如果用了错误的默认路径，save_draft 会把 1GB+ 的草稿+assets 写到 C 盘，剪映 GUI 也看不到。
+>
+> 如何确认实际路径：剪映专业版 → 全局设置 → 草稿 → "草稿位置"字段就是剪映实际读取的根目录。
+
 Copies template files, writes `draft_content.json`, and copies all referenced media to `assets/`. Open 剪映专业版 and the draft appears in the project list.
+
+**配合 video project 归档**：如果项目目录已建 `Jianying-draft/` 并在剪映草稿根建了 symlink 指向它（详见 [video-folder-schema.md](../../../../.opencode/skill/cheat-on-content/shared-references/video-folder-schema.md) 的 symlink 段），`--output` 直接用剪映草稿根 + `--name "<视频标题>"`（symlink 名字），草稿通过 symlink 自动写入项目目录，剪映正常识别。
 
 ## Draft Cache
 
